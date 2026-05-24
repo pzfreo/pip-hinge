@@ -88,6 +88,14 @@ pin_side vol      = 6728.8937 mm³
 inter-leaf clearance = 0.3 mm everywhere
 ```
 
+## Using it in a clamshell case
+
+See [docs/clamshell-integration.md](docs/clamshell-integration.md) for a
+practical guide: sizing, single vs multiple hinges along the back edge,
+how to fuse the hinge into the case bodies, print orientation, and
+opening-angle limits. Worked examples for small (1-hinge) and long
+(3-hinge) cases included.
+
 ## Printing
 
 Lay flat on the bed with the hinge axis along Y (parallel to bed). Print at 0.2 mm
