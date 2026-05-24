@@ -1,8 +1,11 @@
 """Parametric print-in-place piano hinge.
 
-Lifted from hinge-03.fcstd (a FreeCAD parametric design) — same comb
-geometry, every sketch coordinate now expressed as a function of named
-parameters. The FreeCAD source used these spreadsheet cells:
+Derived from "Parametric print-in-place hinge. FreeCAD." by r0berts
+(https://www.printables.com/model/1395662-parametric-print-in-place-hinge-freecad),
+licensed CC BY 4.0. This file is a build123d port with every sketch
+coordinate re-expressed as a function of named parameters. Same comb
+geometry, fully parametric end-to-end. The FreeCAD source used these
+spreadsheet cells:
 
     hingeHeight     total Y extent
     hingeWidth      leaf depth from hinge axis to outer edge
