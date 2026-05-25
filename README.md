@@ -1,9 +1,35 @@
 # pip-hinge
 
-A fully-parametric print-in-place piano hinge in [build123d](https://github.com/gumyr/build123d).
+A parametric print-in-place piano hinge in [build123d](https://github.com/gumyr/build123d),
+designed for clamshell cases.
 
-Lifted from a FreeCAD design with every sketch coordinate re-expressed as a function of
-named parameters. No magic numbers in the geometry.
+Four inputs:
+
+```python
+from hinge import HingeParams, Knuckle, make_hinge
+
+hinge = make_hinge(HingeParams(
+    case_h        = 10,             # case wall height (mm)
+    hinge_length  = 60,             # total hinge length along the axis (mm)
+    stations      = 6,              # alternating cs/ps tab count (even, ≥ 2)
+    knuckle       = Knuckle.FULL,   # FULL = "bump on top", no ramp needed
+))
+```
+
+`make_hinge()` returns a 2-body `Compound`: the cylinder-side leaf (with
+bored knuckle tabs) and the pin-side leaf (with the integral pin).
+
+## The two knuckle options
+
+![knuckle options](docs/diagrams/knuckle_options.png)
+
+| `knuckle`     | knuckle diameter | ramp                  | gap between case walls (flat-open) |
+| ------------- | ---------------- | --------------------- | ---------------------------------- |
+| `Knuckle.FULL`| `2 × case_h`     | none — rests on bed   | `2 × (case_h + mounting_flat)`     |
+| `Knuckle.HALF`| `case_h`         | 45° self-supporting   | `case_h + 2 × mounting_flat`       |
+
+See [docs/clamshell-integration.md](docs/clamshell-integration.md) for
+mounting, orientation, multi-hinge layouts, and the closed-vs-open view.
 
 ## Provenance
 
@@ -11,98 +37,73 @@ This is a port of **["Parametric print-in-place hinge. FreeCAD."](https://www.pr
 by **[r0berts](https://www.printables.com/@r0berts_1183620)** on Printables,
 licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
-The original is a spreadsheet-driven FreeCAD model (`hinge-03.fcstd`); r0berts notes
-they followed [this YouTube tutorial](https://www.youtube.com/watch?v=BD_iP7djo7Q)
-to build it. This repository:
+The original is a spreadsheet-driven FreeCAD model. This repository:
 
 1. Translates the FreeCAD geometry into build123d Python via
    [fcd2b123d](https://github.com/pzfreo/fcd2b123d).
-2. Replaces every literal sketch coordinate with a derivation from the FreeCAD
-   spreadsheet parameters (`hingeHeight`, `hingeWidth`, `pivotInner`, `pivotOuter`,
-   `pivotClearance`, `claspWidth`, `claspClearance`, `claspCenter`), so the design
-   is genuinely parametric end-to-end rather than only at the top level.
-3. Bumps `claspClearance` from the original 0.2 mm (too tight for typical FDM) to
-   0.6 mm by default, giving 0.3 mm of axial gap per side — printable on a standard
-   PLA-tuned printer without supports.
+2. Reparameterises around four case-designer-facing inputs (`case_h`,
+   `hinge_length`, `stations`, `knuckle`) with the original dimensional
+   relationships derived under the hood.
+3. Generalises the comb pattern (hardcoded 6 stations in the original) to
+   any even number of stations ≥ 2, and adds an optional
+   `Knuckle.HALF` mode with a self-supporting ramp for cases where a
+   smaller knuckle is wanted.
 
-Per the CC BY 4.0 terms, modifications include the geometry reparameterisation and
-the build123d port; the underlying design and dimensional relationships are r0berts'.
+Per the CC BY 4.0 terms: design and dimensional relationships are
+r0berts'; modifications are the build123d port, the four-input API, and
+the configurable station count and ramp.
 
 ## Quick start
 
 ```bash
 uv pip install build123d
-python hinge.py    # writes examples/hinge_default.{step,stl}
-```
-
-## Usage
-
-```python
-from hinge import HingeParams, make_hinge
-from build123d import export_stl
-
-# Default 40 × 30 × 10 mm hinge, printable on FDM
-hinge = make_hinge()
-export_stl(hinge, "hinge.stl")
-
-# Scaled up, with tighter clearance for a fine-tuned printer
-hinge = make_hinge(HingeParams(
-    hinge_height=80, hinge_width=60,
-    clasp_clearance=0.3, pivot_clearance=0.6,
-))
+python hinge.py    # writes examples/hinge_full.{step,stl} and hinge_half.{step,stl}
 ```
 
 ## Parameters
 
-The six you'll typically change:
+The four primary inputs:
 
-| Parameter         | Default | Meaning                                                  |
-| ----------------- | ------- | -------------------------------------------------------- |
-| `hinge_height`    | 40      | Total length along the hinge axis (Y)                    |
-| `hinge_width`     | 30      | Depth of each leaf from hinge axis to outer edge (X)     |
-| `hinge_thickness` | 5       | Leaf paddle thickness (Z)                                |
-| `pivot_inner`     | 5       | Bore diameter                                            |
-| `pivot_clearance` | 1.0     | Radial pin/bore gap                                      |
-| `clasp_clearance` | 0.6     | Y-axis gap between meshing teeth (the FDM tolerance)     |
+| Parameter      | Default        | Meaning                                                  |
+| -------------- | -------------- | -------------------------------------------------------- |
+| `case_h`       | (required)     | Case wall height; the hinge's "scale" reference          |
+| `hinge_length` | (required)     | Total hinge length along the axis (Y)                    |
+| `stations`     | 6              | Number of alternating cs/ps tabs (even, ≥ 2)             |
+| `knuckle`      | `Knuckle.FULL` | `FULL` (= 2·case_h diameter, no ramp) or `HALF` (= case_h diameter, 45° ramp) |
 
-Derived defaults (override only if you know what you're doing):
+Three small tuneables:
 
-| Parameter      | Default            | Notes                                          |
-| -------------- | ------------------ | ---------------------------------------------- |
-| `pivot_outer`  | `2 × pivot_inner`  | Knuckle diameter                               |
-| `clasp_width`  | `hinge_height / 6` | Comb tooth width along Y                       |
-| `clasp_center` | `hinge_height / 3` | Used in pin centring                           |
+| Parameter         | Default | Meaning                                            |
+| ----------------- | ------- | -------------------------------------------------- |
+| `mounting_flat`   | 1.0     | Flat width past the disc edge for case-wall fusion |
+| `pivot_clearance` | 0.6     | Radial pin/bore gap (FDM tolerance)                |
+| `clasp_clearance` | 0.4     | Axial gap between cs and ps tabs                   |
 
-Three pin-engagement constants from the original design (`pin_cyl_extra=1.5`,
-`pin_end_offset=0.5`, `pin_short_cyl_factor=1/3`) were hand-tuned by r0berts for
-pin/bore feel — exposed as tunables, leave at defaults unless deliberately tuning.
+Plus three pin-engagement constants from the original FreeCAD source
+(`pin_cyl_extra`, `pin_end_offset`, `pin_short_cyl_factor`) — leave at
+defaults unless deliberately tuning the pin/bore feel.
 
-## Default verification
+## Validation
 
-The defaults reproduce r0berts' geometry bit-for-bit (with `claspClearance` set to
-the printable 0.6 mm value):
+`make_hinge()` raises `ValueError` for hard geometric problems:
+- non-positive `case_h`, `hinge_length`, or negative `mounting_flat`
+- `stations < 2` or odd
+- bore Ø ≤ `pivot_clearance` (knuckle too small for the pivot clearance)
 
-```
-cylinder_side vol = 6060.7123 mm³
-pin_side vol      = 6728.8937 mm³
-inter-leaf clearance = 0.3 mm everywhere
-```
-
-## Using it in a clamshell case
-
-See [docs/clamshell-integration.md](docs/clamshell-integration.md) for a
-practical guide: sizing, single vs multiple hinges along the back edge,
-how to fuse the hinge into the case bodies, print orientation, and
-opening-angle limits. Worked examples for small (1-hinge) and long
-(3-hinge) cases included.
+And warns (`warnings.warn`) when:
+- `clasp_width = hinge_length / stations` drops below ~3 mm (too thin for FDM)
 
 ## Printing
 
-Lay flat on the bed with the hinge axis along Y (parallel to bed). Print at 0.2 mm
-layers, fan on, brim recommended. After printing, gently flex the leaves to break
-the 0.3 mm clearance gaps free. No supports needed — the 5 mm-radius knuckle crowns
-print with minor layer ridges on the top arc but stay within typical FDM overhang
-tolerance.
+Lay flat on the bed with the hinge axis along Y (parallel to bed).
+0.2 mm layers, fan on, brim recommended. After printing, gently flex the
+leaves to break the clearance gaps free.
+
+- **FULL** prints without any supports at any knuckle size — the knuckle
+  rests on the bed.
+- **HALF** prints without supports as long as `mounting_flat` is small
+  enough that the ramp angle stays ≤ 45° (which the default 1 mm satisfies
+  for all sensible `case_h`).
 
 ## License
 
@@ -112,4 +113,4 @@ matching the upstream Printables source. See [LICENSE](LICENSE).
 When using or redistributing, please credit:
 
 - **r0berts** — original FreeCAD design ([Printables](https://www.printables.com/model/1395662-parametric-print-in-place-hinge-freecad))
-- **Paul Fremantle** (pzfreo) — build123d port and parameterisation
+- **Paul Fremantle** (pzfreo) — build123d port, four-input parameterisation, station generalisation, and ramp option
