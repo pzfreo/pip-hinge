@@ -193,6 +193,45 @@ Consequences:
 - The pin segments inside the bores are surrounded by knuckle material —
   no overhang issues.
 
+### The knuckle bottom overhangs into the gap
+
+The case back walls support the knuckle from the wall side (the leaf
+side), but the **opposite side** of the knuckle — the half that bulges
+into the gap between the two case halves — has no material beneath it.
+For small knuckles (`pivot_outer ≤ 6 mm`) the bridge across the gap is
+short enough that FDM bridges it cleanly. For larger knuckles, or for
+prints that need to be reliable first-try, this is where supports start
+to creep in.
+
+`HingeParams(self_support_ramp=True)` extends each leaf downward to the
+bed with a 45° self-supporting inner ramp. cs and ps ramps converge at
+the disc bottom forming a teepee that supports the cylinder from below.
+Both halves print supportless even with larger knuckles.
+
+```
+Side view, hinge in clamshell flat-open orientation:
+
+       case_h ──── ●─── knuckle (above wall, in air)
+                  ╱│╲
+       case_h ──●─●─●──── leaf top, axis Z=case_h
+                │\\   /│
+                │ \\ / │   ← 45° self-support ramps converge at disc bottom
+        wall_t  │  V  │
+       Z = 0  ──┴─────┴── bed
+                ←  lid  →   ←  base  →
+```
+
+The 45° constraint pins `leaf_height = hinge_thickness + hinge_width`,
+so you don't get a new dimensional parameter — just enable the flag.
+For the flag to actually produce a 45° ramp that lands on the bed, your
+case geometry needs to satisfy `case_h = hinge_thickness + hinge_width`
+(easy to arrange by choosing `hinge_width` last). If this constraint is
+not satisfied, the ramp still slopes at 45° but won't reach the bed at
+the wall outer face.
+
+Leave the flag **off** for the standalone print orientation (hinge
+upright on its leaves), where the ramp would just be wasted material.
+
 ## Opening angle
 
 The hinge mechanism rotates freely 360°. What limits actual opening is the
@@ -317,12 +356,13 @@ For most clamshell cases:
 
 ```python
 HingeParams(
-    hinge_height    = back_edge_length,   # match the case
-    hinge_thickness = wall_thickness,     # match the case wall
-    pivot_inner     = 3.0,                # or 4-5 for larger cases
-    pivot_outer     = 6.0,                # ≈ 2 × pivot_inner
-    pivot_clearance = 0.6,                # tighter than default
-    clasp_clearance = 0.4,                # tighter than default for nicer fit
+    hinge_height       = back_edge_length,   # match the case
+    hinge_thickness    = wall_thickness,     # match the case wall
+    pivot_inner        = 3.0,                # or 4-5 for larger cases
+    pivot_outer        = 6.0,                # ≈ 2 × pivot_inner
+    pivot_clearance    = 0.6,                # tighter than default
+    clasp_clearance    = 0.4,                # tighter than default for nicer fit
+    self_support_ramp  = True,               # opt-in 45° ramp, see above
 )
 ```
 
