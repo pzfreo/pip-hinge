@@ -93,12 +93,14 @@ class HingeParams:
     ramps converge at the disc bottom forming a teepee that supports the
     cylinder from below — the assembly prints supportless.
 
-    Leaves it False (default) for the standalone-print orientation,
+    Leave it False (default) for the standalone-print orientation,
     where the hinge is laid with its leaves perpendicular to the bed and
     no ramp is needed.
 
     The 45° constraint pins leaf_height = hinge_thickness + hinge_width
-    (no new dimensional parameter required).
+    (no new dimensional parameter required). For the ramp to actually
+    reach the bed, the case wall height must equal hinge_thickness +
+    hinge_width — see docs/clamshell-integration.md for the geometry.
     """
 
     def _resolve(self) -> dict:
