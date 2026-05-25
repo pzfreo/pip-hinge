@@ -113,6 +113,23 @@ leaves to break the clearance gaps free.
   enough that the ramp angle stays ≤ 45° (which the default 1 mm satisfies
   for all sensible `case_h`).
 
+## How this was built
+
+The build123d code, API design discussions, station-count generalisation,
+self-supporting ramp, clamshell example, and documentation in this
+repository were produced through a paired design session with
+[Claude Code](https://claude.com/claude-code) (Anthropic's Claude Opus 4.7).
+I drove the design decisions — what the API should look like, which
+knuckle geometries to support, what trade-offs to accept — and Claude wrote
+the code, generated the diagrams, ran the verifications, and opened the
+PRs. The conversation is the source of truth for *why* the code looks the
+way it does; the commit history reflects the steps.
+
+The original FreeCAD geometry from r0berts is unchanged in its dimensional
+relationships — it was reparameterised, not redesigned. The Claude
+collaboration is on the build123d port and the case-designer-facing API
+built on top of it.
+
 ## License
 
 This work is licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/),
