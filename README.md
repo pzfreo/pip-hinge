@@ -19,6 +19,14 @@ hinge = make_hinge(HingeParams(
 `make_hinge()` returns a 2-body `Compound`: the cylinder-side leaf (with
 bored knuckle tabs) and the pin-side leaf (with the integral pin).
 
+## In context: a flat-open clamshell with HALF knuckle
+
+![clamshell with HALF knuckle, flat-open print orientation](docs/diagrams/clamshell_half_preview.png)
+
+Built by [`examples/clamshell.py`](examples/clamshell.py) — case_h = 10mm,
+80 × 50 mm footprint, 60 mm hinge with `Knuckle.HALF`. Both halves print
+as one piece in the orientation shown.
+
 ## The two knuckle options
 
 ![knuckle options](docs/diagrams/knuckle_options.png)
