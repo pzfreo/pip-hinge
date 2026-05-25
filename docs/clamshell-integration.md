@@ -10,69 +10,98 @@ printed as a single piece with the hinge already attached. The hinge is
 treated as a separate piano hinge fused to the case back wall — not as the
 case wall itself.
 
-## The hinge in 30 seconds
-
-`make_hinge()` returns a `Compound` containing two solids:
-
-- **`cylinder_side`** — leaf with bored knuckle tabs (3 by default)
-- **`pin_side`** — leaf with integral pin + interleaving tabs (4 by default)
+## The four inputs
 
 ```python
-from hinge import HingeParams, make_hinge
+from hinge import HingeParams, Knuckle, make_hinge
 
-hinge = make_hinge(HingeParams(hinge_height=60, hinge_thickness=2.5))
+hinge = make_hinge(HingeParams(
+    case_h        = 10,             # case wall height (mm)
+    hinge_length  = 60,             # total hinge length along its axis (mm)
+    stations      = 6,              # alternating cs/ps tab count (even, ≥ 2)
+    knuckle       = Knuckle.FULL,   # FULL = no ramp; HALF = 45° self-supporting ramp
+))
 cylinder_side, pin_side = hinge.solids()
 ```
 
-Coordinate convention (when hinge is generated, before any translation):
+Everything else (knuckle diameter, leaf width, pin radius, pocket clearances)
+is derived from these four. Two small tuning knobs remain:
+`mounting_flat` (default 1 mm of flat past the disc edge for case-wall
+attachment), `pivot_clearance` (radial pin/bore gap), and `clasp_clearance`
+(axial gap between meshing tabs).
 
+## The two knuckle options
+
+![FULL vs HALF cross-section](diagrams/knuckle_options.png)
+
+Both panels above use `case_h = 10mm`, `mounting_flat = 1mm`.
+
+### Knuckle.FULL  (Po = 2 × case_h)
+
+The original print-in-place design. The knuckle diameter equals the full
+closed-case height (lid + base stacked). When flat-open for printing, the
+knuckle's bottom rests directly on the bed — no ramp, no support needed.
+When closed, the back of the case shows a clean half-D bulge of full
+case height.
+
+Geometric properties:
+- Knuckle protrudes `case_h` *above* the wall top (the "bump on top").
+- Gap between case walls when flat-open: `2 × case_h + 2 × mounting_flat`.
+- Leaf paddle bottom is on the bed; the leaf is a tall rectangle.
+
+### Knuckle.HALF  (Po = case_h)
+
+A more compact knuckle, diameter equal to a single wall's height. Sits
+mostly above the wall top, with the lower half overhanging into the gap.
+A 45°-or-shallower ramp on each leaf supports the knuckle from below as
+the print rises — the two leaves' ramps converge at the knuckle bottom.
+
+Geometric properties:
+- Knuckle protrudes `case_h / 2` above the wall.
+- Gap between case walls when flat-open: `case_h + 2 × mounting_flat`.
+- Leaf has a sloped lower-inner face (the ramp).
+
+## Closed vs flat-open
+
+![closed and flat-open views](diagrams/closed_vs_open.png)
+
+The closed-case profile shows the D-shaped bulge at the back. When flat-open
+for printing, the same knuckle sits at axis `Z = case_h` (the seam between
+lid and base when closed), with the leaves extending from the axis down to
+the bed.
+
+## Coordinate convention
+
+`make_hinge()` returns the hinge centred on the origin:
+
+- Hinge axis runs along **Y** through `(X=0, Z=0)`.
+- `cylinder_side` leaf extends in **+X**, `pin_side` leaf in **−X**.
+- Leaf top sits at `Z = 0`; leaf bottom at `Z = -case_h`.
+- Knuckle is centred at `(0, 0)`, radius `Po/2`, extending up to `Z = +Po/2`.
+- Y range: `[−hinge_length/2, +hinge_length/2]`.
+
+To position the hinge into a clamshell case in the **flat-open** orientation
+(lid + base coplanar on the bed), translate so the axis sits at the wall
+top:
+
+```python
+hinge = make_hinge(params).translate((X_axis, Y_offset, case_h))
 ```
-       Z (up)
-       │
-       │   ●  knuckle (radius Po/2)
-       │  ╱│╲
-   ────┼─●─●──── leaf top plane (Z = 0)
-       │ │ │
-       │ │ │  ←  paddles, hinge_thickness deep into −Z
-       │ │ │
-                     pin_side  ←  hinge axis (Y)  →  cylinder_side
-```
 
-- Hinge axis runs along **Y** through the origin (X=0, Z=0).
-- `pin_side` leaf paddle extends in **−X** from the axis.
-- `cylinder_side` leaf paddle extends in **+X** from the axis.
-- Both leaf paddles sit at **Z ∈ [−hinge_thickness, 0]**.
-- The knuckle bulges up to **Z = +pivot_outer/2**.
-- Y range: **[−hinge_height/2, +hinge_height/2]**.
+## Stations
 
-When the case folds closed, `pin_side` rotates 180° around the Y axis and
-lands on top of `cylinder_side`.
+`stations` is the count of alternating cs/ps tabs along the hinge length.
+Must be even and ≥ 2. `clasp_width = hinge_length / stations`.
 
-## Sizing for a clamshell
+| stations | tabs                                          | typical use         |
+| -------- | --------------------------------------------- | ------------------- |
+| 2        | 1 cs centred, 2 ps half-end-caps              | tiny hinges (< 30mm)|
+| 4        | 2 cs, 1 ps middle, 2 ps half-end-caps         | small               |
+| 6        | 3 cs, 2 ps middle, 2 ps half-end-caps         | default             |
+| 8, 10, … | scales up cleanly                             | long hinges         |
 
-The hinge cares about exactly two case properties:
-
-| Case property        | Hinge parameter   | Why                                    |
-| -------------------- | ----------------- | -------------------------------------- |
-| Back-edge length     | `hinge_height`    | Hinge runs along (part of) this edge   |
-| Wall thickness       | `hinge_thickness` | Leaf flush-mounts to the wall top      |
-
-The other case dimensions (front-to-back depth, lid/base height, footprint
-shape) are **independent of the hinge**. Pick them to suit the contents.
-
-Sensible proportions for the rest of the hinge parameters at typical case
-scales:
-
-| Case scale               | `pivot_inner` | `pivot_outer` | Notes                  |
-| ------------------------ | ------------- | ------------- | ---------------------- |
-| Tiny (30–60 mm wide)     | 2.5–3         | 5–6           | Small pin, small bulge |
-| Small (60–150 mm)        | 4–5           | 8–10          | Defaults work here     |
-| Medium (150–300 mm)      | 5–6           | 10–12         |                        |
-| Large (300+ mm)          | 6–8           | 12–16         | Stronger pin           |
-
-The 5 mm default `pivot_outer` makes the knuckle protrude 5 mm above the case
-wall — that's piano-hinge aesthetic, not a flaw. Drop the diameter to make
-the hinge less visible.
+Below `clasp_width ≈ 3mm` the tabs become too thin to print cleanly on FDM
+— a warning is emitted.
 
 ## One hinge or many?
 
@@ -86,176 +115,77 @@ hinges along the back edge are usually better than one long one:
 | 250–450 mm            | 2                    | Position ~10–20 % in from each end          |
 | > 450 mm              | 3+                   | One centred, two ~15 % from the ends        |
 
-Two hinges of length 40–80 mm at the ends of a 200 mm case work better than
-one 180 mm hinge: shorter teeth mean less risk of warping during print,
-less surface area for inter-leaf fusion, and easier to wiggle free
-post-print. The structural continuity along the back comes from the case
-walls and floor, not from the hinge.
-
 Multiple hinges **must be coaxial** — they all share the same hinge axis (Y
 line). You position them at different Y offsets along that axis.
 
 ## Attaching the hinge to the case
 
 Take the two solids from `make_hinge()`, position them on the case's back
-edge, and boolean-union them into the case bodies. The hinge code itself
-doesn't change.
+edge, and boolean-union them into the case bodies.
 
-### Mounting position
-
-Put the hinge axis at the **top of the case back wall**, on the **outside**
-of the wall. Concretely, if your base back wall extends from Z=0 to Z=H
-with its outer face at X=X_back:
-
-- Translate the hinge so its axis sits at `(X=X_back + hinge_width, Y=0, Z=H)`.
-- The `cylinder_side` paddle now lies on top of the base back wall, leaf
-  bottom at Z=H−hinge_thickness, leaf top at Z=H (flush with wall top).
-- The `pin_side` paddle extends in −X, ready to be fused to the lid back
-  wall.
-
-For the lid: same geometry mirrored — the lid back wall sits at
-X=X_back_lid (= X_back + 2·hinge_width when both halves are coplanar in the
-flat-open print), pin_side leaf flush with lid wall top.
-
-### Boolean fusion
+For a clamshell with both halves coplanar on the bed during print:
 
 ```python
-cs, ps = make_hinge(HingeParams(hinge_height=60, hinge_thickness=wall_t)).solids()
+cs, ps = make_hinge(HingeParams(
+    case_h=wall_h, hinge_length=back_edge_len, knuckle=Knuckle.FULL,
+)).solids()
 
-# Position the hinge axis at the top-rear of the base back wall
-cs_positioned = cs.translate((base_back_wall_outer_x + hinge_width, 0, case_h))
-ps_positioned = ps.translate((base_back_wall_outer_x + hinge_width, 0, case_h))
+cs_positioned = cs.translate((0, 0, wall_h))   # axis on top of base wall
+ps_positioned = ps.translate((0, 0, wall_h))
 
-# Fuse into the respective halves
 base_body = base_body + cs_positioned
 lid_body  = lid_body  + ps_positioned
 ```
 
-`hinge_width` here refers to the leaf depth — the X-extent of the paddle
-from hinge axis to outer edge. Default 30 mm; lower to 10–15 mm if you just
-need enough material to fuse cleanly.
+The leaf's outer face (at `X = W`) is where the case wall attaches.
+`mounting_flat` controls the flat strip of leaf material past the disc edge
+that the wall actually glues / fuses to — 1 mm is the default and usually
+plenty for boolean union. Increase it for a larger glue surface at the cost
+of a wider gap between case halves.
 
 ### Multi-hinge variant
 
-For 2 or 3 hinges along the back, build each one independently and
-translate to its Y position:
-
 ```python
-hinge_specs = [
-    # (y_centre, hinge_height)
-    (-100, 50),       # left hinge
-    (   0, 50),       # centre hinge
-    ( 100, 50),       # right hinge
-]
-
-base_body, lid_body = base_blank, lid_blank
-for y_centre, h_len in hinge_specs:
+for y_centre in [-100, 0, 100]:
     cs, ps = make_hinge(HingeParams(
-        hinge_height=h_len, hinge_thickness=wall_t,
+        case_h=wall_h, hinge_length=50, knuckle=Knuckle.FULL,
     )).solids()
-    cs_pos = cs.translate((mount_x, y_centre, case_h))
-    ps_pos = ps.translate((mount_x, y_centre, case_h))
-    base_body = base_body + cs_pos
-    lid_body  = lid_body  + ps_pos
+    base = base + cs.translate((0, y_centre, wall_h))
+    lid  = lid  + ps.translate((0, y_centre, wall_h))
 ```
 
-All hinges sit on the same axis (`Z=case_h`, `X=mount_x`), just at
-different Y positions. The case back wall remains continuous between
-them — only the hinge leaves are segmented.
+All hinges sit on the same axis (`Z = wall_h`), at different Y positions.
 
 ## Print orientation
 
 The natural orientation is **flat-open**: lid and base coplanar on the bed,
 walls extending up, hinge axis at the top of the back walls.
 
-```
-Side view (looking from +Y, in print orientation):
+- **Knuckle.FULL**: knuckle bottom rests on the bed at `Z = 0` (since
+  `Po = 2 × case_h` and the axis is at `Z = case_h`). No ramp, no
+  in-air bridging. Prints cleanly regardless of knuckle size.
+- **Knuckle.HALF**: knuckle bottom hovers at `Z = case_h / 2`. The 45°
+  ramps on each leaf converge at the knuckle bottom, supporting it from
+  below. Prints supportless at any case size, but you need to choose
+  `mounting_flat` small enough that the ramp angle stays ≤ 45°.
 
-       case_h ──── ●─── knuckle (above wall, in air)
-                  ╱│╲
-       case_h ──●─●─●──── leaf top, axis Z=case_h
-                │   │
-        wall_t  │   │  ← case back walls (lid and base)
-                │   │
-       Z = 0  ──┴───┴──── bed
-                ←  lid  →   ←  base  →
-```
-
-Consequences:
-
-- The hinge is **elevated** above the bed (knuckle peak at `case_h + pivot_outer/2`).
-- The case back walls provide structural support below the hinge — no
-  in-air bridging needed.
-- The knuckle prints as a horizontal cylinder, axis along Y. The top arc
-  is an overhang of up to 90° at the very crown. For 5 mm radius knuckles
-  this is fine on FDM without supports; 8+ mm radius might want a brim
-  or careful cooling.
-- The pin segments inside the bores are surrounded by knuckle material —
-  no overhang issues.
-
-### The knuckle bottom overhangs into the gap
-
-The case back walls support the knuckle from the wall side (the leaf
-side), but the **opposite side** of the knuckle — the half that bulges
-into the gap between the two case halves — has no material beneath it.
-For small knuckles (`pivot_outer ≤ 6 mm`) the bridge across the gap is
-short enough that FDM bridges it cleanly. For larger knuckles, or for
-prints that need to be reliable first-try, this is where supports start
-to creep in.
-
-`HingeParams(self_support_ramp=True)` extends each leaf downward to the
-bed with a 45° self-supporting inner ramp. cs and ps ramps converge at
-the disc bottom forming a teepee that supports the cylinder from below.
-Both halves print supportless even with larger knuckles.
-
-```
-Side view, hinge in clamshell flat-open orientation:
-
-       case_h ──── ●─── knuckle (above wall, in air)
-                  ╱│╲
-       case_h ──●─●─●──── leaf top, axis Z=case_h
-                │\\   /│
-                │ \\ / │   ← 45° self-support ramps converge at disc bottom
-        wall_t  │  V  │
-       Z = 0  ──┴─────┴── bed
-                ←  lid  →   ←  base  →
-```
-
-The 45° constraint pins `leaf_height = hinge_thickness + hinge_width`,
-so you don't get a new dimensional parameter — just enable the flag.
-For the flag to actually produce a 45° ramp that lands on the bed, your
-case geometry needs to satisfy `case_h = hinge_thickness + hinge_width`
-(easy to arrange by choosing `hinge_width` last). If this constraint is
-not satisfied, the ramp still slopes at 45° but won't reach the bed at
-the wall outer face.
-
-Leave the flag **off** for the standalone print orientation (hinge
-upright on its leaves), where the ramp would just be wasted material.
+In both cases the case walls themselves provide the structural support
+below the hinge — no in-air bridging needed across the wall faces.
 
 ## Opening angle
 
 The hinge mechanism rotates freely 360°. What limits actual opening is the
-**case geometry**, not the hinge:
+**case geometry**:
 
-| Setup                                                | Max angle  |
-| ---------------------------------------------------- | ---------- |
-| Hinge axis right at the back wall top, on a table    | 180°       |
-| Hinge axis offset back by `pivot_outer/2`            | ~270°      |
-| Hinge axis offset back by `pivot_outer`              | ~360°      |
-| Case picked up off the table                         | 360°       |
+| Setup                                                 | Max angle  |
+| ----------------------------------------------------- | ---------- |
+| Hinge axis right at the back wall top, on a table     | 180°       |
+| Hinge axis offset back by `mounting_flat + Ro`        | ~270°      |
+| Case picked up off the table                          | 360°       |
 
 For a clamshell that lies flat-open on a table, 180° is the natural max.
-The lid simply hits the table when fully open.
-
-To get >180° (lid folds back behind the base), set the hinge axis behind
-the back wall plane by offsetting in **+X** for cylinder_side and **−X**
-for pin_side before fusion. This creates a small gap between the case
-back walls and the hinge axis, letting the lid rotate past flat.
 
 ## Sealing & closure fit
-
-When the case is folded closed, the lid's bottom edge meets the base's top
-edge along the perimeter. For a clean fit:
 
 - **Same wall height**: the symmetric clamshell assumes lid and base walls
   are equal. They meet at the midplane of the assembled case.
@@ -266,105 +196,87 @@ edge along the perimeter. For a clean fit:
   closed, add a friction tab, snap catch, or magnet pocket. (Out of scope
   for this doc.)
 
-## Worked example: small box, 1 hinge
+## Worked example: small box, 1 hinge, FULL knuckle
 
 ```python
-from build123d import Align, Box, Compound, Location, export_stl
-from hinge import HingeParams, make_hinge
+from build123d import Align, Box, Location, export_stl
+from hinge import HingeParams, Knuckle, make_hinge
 
-# ── case parameters ────────────────────────────────────────────────
-case_w, case_d, case_h = 80, 60, 25      # width (Y) × depth (X) × height (Z)
+case_w, case_d, wall_h = 80, 60, 10       # Y × X × Z
 wall_t = 2.5
-hinge_len = case_w * 0.8                  # 80% of back edge
+hinge_len = case_w * 0.8
 
-# ── build hollow case half ─────────────────────────────────────────
 def hollow_half(origin_x_sign):
     """Open-top box, origin at hinge axis, half extends in given X sign."""
-    outer = Box(case_d, case_w, case_h,
+    outer = Box(case_d, case_w, wall_h,
                 align=(Align.MIN if origin_x_sign > 0 else Align.MAX,
                        Align.CENTER, Align.MIN))
-    inner = Box(case_d - 2*wall_t, case_w - 2*wall_t, case_h - wall_t,
+    inner = Box(case_d - 2*wall_t, case_w - 2*wall_t, wall_h - wall_t,
                 align=(Align.MIN if origin_x_sign > 0 else Align.MAX,
                        Align.CENTER, Align.MIN))
-    inner = inner.move(Location((
-        origin_x_sign * wall_t, 0, wall_t,
-    )))
+    inner = inner.move(Location((origin_x_sign * wall_t, 0, wall_t)))
     return outer - inner
 
 base_blank = hollow_half(+1)
 lid_blank  = hollow_half(-1)
 
-# ── build hinge and fuse ───────────────────────────────────────────
 cs, ps = make_hinge(HingeParams(
-    hinge_height=hinge_len, hinge_thickness=wall_t,
+    case_h=wall_h, hinge_length=hinge_len, knuckle=Knuckle.FULL,
 )).solids()
-cs_mounted = cs.translate((0, 0, case_h))
-ps_mounted = ps.translate((0, 0, case_h))
 
-base = base_blank + cs_mounted
-lid  = lid_blank  + ps_mounted
+base = base_blank + cs.translate((0, 0, wall_h))
+lid  = lid_blank  + ps.translate((0, 0, wall_h))
 
-# ── export ─────────────────────────────────────────────────────────
-assembly = base + lid
-export_stl(assembly, "clamshell.stl")
+export_stl(base + lid, "clamshell.stl")
 ```
 
 ## Worked example: long box, 3 hinges
 
 ```python
-case_w = 400                       # long case
-hinge_len_each = 60                # each hinge 60 mm long
-hinge_y_centres = [-150, 0, 150]   # three hinges spaced 150 mm apart
+case_w = 400
+hinge_len_each = 60
+hinge_y_centres = [-150, 0, 150]
 
-base, lid = base_blank, lid_blank   # built as before
+base, lid = base_blank, lid_blank
 for yc in hinge_y_centres:
     cs, ps = make_hinge(HingeParams(
-        hinge_height=hinge_len_each, hinge_thickness=wall_t,
+        case_h=wall_h, hinge_length=hinge_len_each, knuckle=Knuckle.FULL,
     )).solids()
-    base = base + cs.translate((0, yc, case_h))
-    lid  = lid  + ps.translate((0, yc, case_h))
+    base = base + cs.translate((0, yc, wall_h))
+    lid  = lid  + ps.translate((0, yc, wall_h))
 ```
 
 The case back walls run continuously the full 400 mm; only the hinges are
-segmented. The structural load (lid weight) distributes across the three
-pivot points.
+segmented.
 
 ## Common gotchas
 
-- **Leaf too short to fuse cleanly**: keep `hinge_height` at least
-  `4 × clasp_width` so you get a full comb pattern. The default
-  `clasp_width = hinge_height/6` produces 7 segments — anything less and
-  the comb degenerates. For a 20 mm hinge with 5 segments instead of 7,
-  see "changing the segment count" in the main README (not yet
-  implemented as a parameter).
-- **`hinge_thickness` left at default**: easy to forget. The 5 mm default
-  is for the standalone hinge — for a clamshell with 2.5 mm walls, set
-  it to 2.5 mm so the leaf integrates flush.
-- **Axis offset interacts with the back wall**: if you offset the hinge
-  for >180° opening, the case back walls need to be set back too, or
-  the wall will block rotation.
-- **Knuckle overhang at large pivot_outer**: above ~12 mm diameter
-  knuckle, the unsupported top arc starts to need brim/support on most
-  FDM printers. Drop layer height to 0.1 mm or accept a rougher crown.
-- **Pin/bore clearance vs printer tuning**: `pivot_clearance=1.0` is
-  generous and works on poorly tuned printers; drop to 0.4–0.6 mm for
-  a tighter, less sloppy pivot on a well-tuned printer.
+- **Wrong case_h**: `case_h` is the *wall height* of one case half, not the
+  combined closed-case height. At FULL the knuckle works out to `2 × case_h`
+  in diameter — twice the wall.
+- **Too many stations**: doubling stations halves `clasp_width`. Below ~3 mm
+  clasps print poorly on FDM (a warning fires). For long hinges, keep
+  stations at 6–10 and scale `hinge_length` instead.
+- **Picking HALF for big knuckles**: at HALF the knuckle is one wall's
+  height. For small cases (`case_h < ~5 mm`) the resulting bore gets close
+  to the pin clearance and the pin barely fits — a hard error fires.
+  Pick FULL for tiny cases.
+- **Increasing mounting_flat for HALF**: bigger mounting_flat means
+  shallower ramp (still self-supporting). But the gap between case halves
+  also grows. 1–2 mm is usually plenty for fusion.
 
-## Quick reference: what to pass to `make_hinge()`
+## Quick reference
 
 For most clamshell cases:
 
 ```python
 HingeParams(
-    hinge_height       = back_edge_length,   # match the case
-    hinge_thickness    = wall_thickness,     # match the case wall
-    pivot_inner        = 3.0,                # or 4-5 for larger cases
-    pivot_outer        = 6.0,                # ≈ 2 × pivot_inner
-    pivot_clearance    = 0.6,                # tighter than default
-    clasp_clearance    = 0.4,                # tighter than default for nicer fit
-    self_support_ramp  = True,               # opt-in 45° ramp, see above
+    case_h          = wall_h,            # case wall height
+    hinge_length    = back_edge_length,  # total length along the hinge axis
+    stations        = 6,                 # default
+    knuckle         = Knuckle.FULL,      # or HALF for a more compact knuckle
+    mounting_flat   = 1.0,               # mm of flat past the disc for fusion
+    pivot_clearance = 0.6,               # default — works on most FDM printers
+    clasp_clearance = 0.4,               # default
 )
 ```
-
-The other parameters (`clasp_width`, `clasp_center`, pin-tuning constants)
-can be left at their defaults — they're derived sensibly from the others.
