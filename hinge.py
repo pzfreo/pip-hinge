@@ -258,7 +258,10 @@ def make_hinge(params: HingeParams = None) -> Compound:
     )
     cs_sketch = Sketch() + Plane.XZ * (make_face(cs_profile) - Circle(Ri))
     cs_pad = extrude(cs_sketch, amount=H / 2, both=True)
-    Xo_cs = Xi - W
+    # Pocket polygon left edge must stay left of the notch jogs (which go to -Xi),
+    # otherwise the polyline self-intersects and OCC misclassifies the interior.
+    # Old defaults happened to satisfy Xi − W ≤ −Xi; the new API's small W doesn't.
+    Xo_cs = min(Xi - W, -Xi - 1.0)
     cs_pocket = make_face(_cs_pocket_polyline(N, Cw, Cc, Xi, Xo_cs))
     cylinder_side = cs_pad - extrude(cs_pocket, amount=pocket_extrude, both=True)
 

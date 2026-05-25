@@ -196,39 +196,49 @@ For a clamshell that lies flat-open on a table, 180° is the natural max.
   closed, add a friction tab, snap catch, or magnet pocket. (Out of scope
   for this doc.)
 
-## Worked example: small box, 1 hinge, FULL knuckle
+## Worked example: small box, 1 hinge
+
+See [`examples/clamshell.py`](../examples/clamshell.py) for the full
+runnable script — it builds the same 80 × 50 × 10 mm clamshell for both
+`Knuckle.FULL` and `Knuckle.HALF`, exporting to
+`examples/clamshell_full.{step,stl}` and `examples/clamshell_half.{step,stl}`.
+
+Sketch:
 
 ```python
-from build123d import Align, Box, Location, export_stl
+from build123d import Align, Box, Compound, export_stl
 from hinge import HingeParams, Knuckle, make_hinge
 
-case_w, case_d, wall_h = 80, 60, 10       # Y × X × Z
-wall_t = 2.5
-hinge_len = case_w * 0.8
+CASE_H, CASE_W, CASE_D, WALL_T = 10, 80, 50, 2.5
 
-def hollow_half(origin_x_sign):
-    """Open-top box, origin at hinge axis, half extends in given X sign."""
-    outer = Box(case_d, case_w, wall_h,
-                align=(Align.MIN if origin_x_sign > 0 else Align.MAX,
-                       Align.CENTER, Align.MIN))
-    inner = Box(case_d - 2*wall_t, case_w - 2*wall_t, wall_h - wall_t,
-                align=(Align.MIN if origin_x_sign > 0 else Align.MAX,
-                       Align.CENTER, Align.MIN))
-    inner = inner.move(Location((origin_x_sign * wall_t, 0, wall_t)))
+def hollow_half(x_sign, leaf_outer_x):
+    """Open-top box; back wall sits at X = leaf_outer_x on the hinge side."""
+    x_min = x_sign * leaf_outer_x if x_sign > 0 else x_sign * (leaf_outer_x + CASE_D)
+    align = (Align.MIN, Align.CENTER, Align.MIN)
+    outer = Box(CASE_D, CASE_W, CASE_H, align=align).translate((x_min, 0, 0))
+    inner = Box(CASE_D - 2*WALL_T, CASE_W - 2*WALL_T, CASE_H - WALL_T,
+                align=align).translate((x_min + WALL_T, 0, WALL_T))
     return outer - inner
 
-base_blank = hollow_half(+1)
-lid_blank  = hollow_half(-1)
+params = HingeParams(case_h=CASE_H, hinge_length=64, knuckle=Knuckle.FULL)
+leaf_outer = CASE_H * params.knuckle.value / 100 + params.mounting_flat  # = W
 
-cs, ps = make_hinge(HingeParams(
-    case_h=wall_h, hinge_length=hinge_len, knuckle=Knuckle.FULL,
-)).solids()
+cs, ps = make_hinge(params).solids()
+cs = cs.translate((0, 0, CASE_H))
+ps = ps.translate((0, 0, CASE_H))
 
-base = base_blank + cs.translate((0, 0, wall_h))
-lid  = lid_blank  + ps.translate((0, 0, wall_h))
-
-export_stl(base + lid, "clamshell.stl")
+base = hollow_half(+1, leaf_outer) + cs
+lid  = hollow_half(-1, leaf_outer) + ps
+export_stl(Compound([base, lid]), "clamshell.stl")
 ```
+
+Two things easy to get wrong:
+
+- The case back wall sits at **X = W** (= `Ro + mounting_flat`), not at the
+  hinge axis. The wall's inner face attaches to the leaf's outer face there.
+- `base + lid` returns a `ShapeList` (one-shot boolean), not a `Compound` of
+  two bodies. Wrap with `Compound([base, lid])` to keep them as separate
+  print-in-place bodies.
 
 ## Worked example: long box, 3 hinges
 
