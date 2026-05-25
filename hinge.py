@@ -77,6 +77,32 @@ class HingeParams:
     pin_end_offset: float = 0.5     # end-cap offset (Constraint 21)
     pin_short_cyl_factor: float = 1 / 3   # short-cyl length = claspWidth * this (Constraint 23)
 
+    # ── clamshell self-support ramp ────────────────────────────────
+    self_support_ramp: bool = False
+    """Extend each leaf downward with a 45° self-supporting ramp.
+
+    When laid flat in a clamshell case (lid + base coplanar on the bed),
+    the knuckle becomes a horizontal cylinder hovering above the gap
+    between case halves. The bottom half of that cylinder overhangs into
+    open air on the side away from each leaf.
+
+    Setting this True extends each leaf from the disc bottom (Z=-T) down
+    to Z=-(T+W) on the outer face, with a 45° inner ramp going from the
+    outer-bottom corner up to the disc bottom apex. When both leaves are
+    placed in a clamshell with their walls flanking the hinge, the two
+    ramps converge at the disc bottom forming a teepee that supports the
+    cylinder from below — the assembly prints supportless.
+
+    Leave it False (default) for the standalone-print orientation,
+    where the hinge is laid with its leaves perpendicular to the bed and
+    no ramp is needed.
+
+    The 45° constraint pins leaf_height = hinge_thickness + hinge_width
+    (no new dimensional parameter required). For the ramp to actually
+    reach the bed, the case wall height must equal hinge_thickness +
+    hinge_width — see docs/clamshell-integration.md for the geometry.
+    """
+
     def _resolve(self) -> dict:
         """Resolve all defaults and validate."""
         pivot_outer = self.pivot_outer if self.pivot_outer is not None else self.pivot_inner * 2
@@ -90,6 +116,11 @@ class HingeParams:
             raise ValueError(
                 f"pivot_outer ({pivot_outer}) must be > pivot_inner ({self.pivot_inner})"
             )
+        leaf_height = (
+            self.hinge_thickness + self.hinge_width
+            if self.self_support_ramp
+            else self.hinge_thickness
+        )
         return dict(
             H=self.hinge_height,
             W=self.hinge_width,
@@ -103,6 +134,7 @@ class HingeParams:
             pin_cyl_extra=self.pin_cyl_extra,
             pin_end_offset=self.pin_end_offset,
             pin_short=self.pin_short_cyl_factor,
+            leaf_height=leaf_height,
         )
 
 
@@ -112,15 +144,20 @@ def make_hinge(params: HingeParams = None) -> Compound:
     H, W, T = p["H"], p["W"], p["T"]
     Pi, Po, Pc = p["Pi"], p["Po"], p["Pc"]
     Cw, Cc, Cz = p["Cw"], p["Cc"], p["Cz"]
+    Lh = p["leaf_height"]           # leaf height (= T when ramp off, T+W when on)
 
     Ro = Po / 2                     # knuckle outer radius
     Ri = Pi / 2                     # bore radius
     Rp = Ri - Pc / 2                # pin radius
     Xi = Ro + Pc                    # inner X boundary of comb (= pivot_outer/2 + pivot_clearance)
+    pocket_extrude = Lh + Pc / 2    # = (Po + Pc)/2 when ramp off; deeper when on
 
     # ── cylinder-side leaf cross-section (Sketch in original) ──────
+    # With self_support_ramp, the outer-bottom corner moves to (W, -Lh),
+    # and the segment from there back to (0, -T) is the 45° self-support
+    # ramp. With ramp off (Lh == T), this is the original profile.
     cs_profile = Polyline(
-        (Ro, 0), (W, 0), (W, -T), (0, -T),
+        (Ro, 0), (W, 0), (W, -Lh), (0, -T),
     ) + CenterArc(center=(0, 0), radius=Ro, start_angle=270, arc_size=-270)
     cs_sketch = Sketch() + Plane.XZ * (make_face(cs_profile) - Circle(Ri))
     cs_pad = extrude(cs_sketch, amount=H / 2, both=True)
@@ -149,11 +186,11 @@ def make_hinge(params: HingeParams = None) -> Compound:
         (Xo_cs,  pad_max),  # close back to start
     )
     cs_pocket = make_face(cs_pocket_profile)
-    cylinder_side = cs_pad - extrude(cs_pocket, amount=(Po + Pc) / 2, both=True)
+    cylinder_side = cs_pad - extrude(cs_pocket, amount=pocket_extrude, both=True)
 
     # ── pin-side leaf cross-section (Sketch001) ────────────────────
     ps_profile = Polyline(
-        (-Ro, 0), (-W, 0), (-W, -T), (0, -T),
+        (-Ro, 0), (-W, 0), (-W, -Lh), (0, -T),
     ) + CenterArc(center=(0, 0), radius=Ro, start_angle=270, arc_size=270)
     ps_sketch = Sketch() + Plane.XZ * make_face(ps_profile)
     ps_pad = extrude(ps_sketch, amount=H / 2, both=True)
@@ -177,7 +214,7 @@ def make_hinge(params: HingeParams = None) -> Compound:
         (-Xi,    -ps_tab_outer),  # close
     )
     ps_pocket = make_face(ps_pocket_profile)
-    pin_side = ps_pad - extrude(ps_pocket, amount=(Po + Pc) / 2, both=True)
+    pin_side = ps_pad - extrude(ps_pocket, amount=pocket_extrude, both=True)
 
     # ── pin segments (Sketch004) ───────────────────────────────────
     # Four revolution profiles in the (X, Y) plane, revolved around Y axis.
