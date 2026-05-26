@@ -61,6 +61,24 @@ Geometric properties:
 - Gap between case walls when flat-open: `case_h + 2 × mounting_flat`.
 - Leaf has a sloped lower-inner face (the ramp).
 
+### Knuckle.SMALL  (Po = max(case_h / 2, 5 mm))
+
+The smallest knuckle the geometry will produce: 1/4 of FULL with a 5 mm
+absolute floor that keeps the bore + pin big enough to print reliably on
+a 0.4 mm-nozzle FDM regardless of case height. For `case_h ≥ 10 mm` the
+1/4-of-FULL ratio dominates; below that, the 5 mm floor kicks in.
+
+Geometric properties:
+- Knuckle protrudes `Po / 2` above the wall.
+- Ramp **steeper** than HALF's at the same `mounting_flat`. Counterintuitive
+  but true: a smaller knuckle puts the disc bottom higher above the bed,
+  so the leaf's ramp (from outer-bottom corner to disc bottom) rises more
+  per unit of horizontal travel. At default `mounting_flat = 1 mm`, the
+  ramp sits at ~25° from vertical — comfortably self-supporting (versus
+  HALF at ~50° which works in practice but is at the FDM-cooling limit).
+- Pin diameter for `case_h = 10 mm`: 1.9 mm — at the lower bound of
+  reliable FDM print. For smaller cases the 5 mm floor preserves this.
+
 ## Closed vs flat-open
 
 ![closed and flat-open views](diagrams/closed_vs_open.png)

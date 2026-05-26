@@ -50,10 +50,17 @@ from OCP.TopoDS import TopoDS_Compound
 
 
 class Knuckle(Enum):
-    """Knuckle size, expressed as percent of the closed-case height (2 × case_h)."""
+    """Knuckle size.
+
+    FULL and HALF are percentages of the closed-case height (2 × case_h);
+    SMALL is computed in ``_resolve()`` as max(case_h/2, 5 mm) — the 1/4-of-FULL
+    ratio with a 5 mm absolute floor that keeps the bore + pin big enough to
+    print reliably on a 0.4 mm-nozzle FDM regardless of case height.
+    """
 
     FULL = 100   # Po = 2 × case_h; knuckle bottom touches bed, no ramp needed
     HALF = 50    # Po = case_h; 45°-or-shallower self-supporting ramp
+    SMALL = -1   # sentinel — see _resolve() for the actual size formula
 
 
 @dataclass(frozen=True)
@@ -86,7 +93,13 @@ class HingeParams:
         if self.mounting_flat < 0:
             raise ValueError(f"mounting_flat must be ≥ 0 (got {self.mounting_flat})")
 
-        Po = 2 * self.case_h * self.knuckle.value / 100
+        if self.knuckle is Knuckle.SMALL:
+            # 1/4 of FULL, floored at 5 mm so the pin & bore stay printable
+            # at any case height. For case_h ≥ 10 mm the ratio dominates;
+            # below that the 5 mm floor kicks in.
+            Po = max(self.case_h / 2, 5.0)
+        else:
+            Po = 2 * self.case_h * self.knuckle.value / 100
         Ro = Po / 2
         Pi = Po / 2                                  # bore diameter (= Ro)
         if Pi <= self.pivot_clearance:

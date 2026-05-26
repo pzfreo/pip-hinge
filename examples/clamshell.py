@@ -1,9 +1,15 @@
 """Worked example: small clamshell boxes with an integrated print-in-place hinge.
 
-Generates three variants:
+Generates four variants:
 
   examples/clamshell_full.{step,stl}     — Knuckle.FULL, bump-on-top knuckle
   examples/clamshell_half.{step,stl}     — Knuckle.HALF, smaller knuckle + ramp
+  examples/clamshell_small.{step,stl}    — Knuckle.SMALL, smallest printable
+                                            knuckle (1/4 of FULL, floored at
+                                            Po = 5 mm). Same default mounting_flat
+                                            as the others; the smaller knuckle
+                                            naturally gives a steeper, more
+                                            self-supporting ramp.
   examples/clamshell_magnets.{step,stl}  — Knuckle.HALF + 4 corner magnet pockets,
                                             a useful little case on its own
 
@@ -104,14 +110,29 @@ def add_corner_magnet_pockets(half, x_sign: int, leaf_outer_x: float):
     return half
 
 
+def _resolved_po(knuckle: Knuckle) -> float:
+    """Po that ``hinge.py`` will compute internally for this knuckle option."""
+    if knuckle is Knuckle.SMALL:
+        return max(HINGE_WALL_H / 2, 5.0)
+    return 2 * HINGE_WALL_H * knuckle.value / 100
+
+
 def build_clamshell(knuckle: Knuckle, magnets: bool = False):
+    # All three variants use the same default mounting_flat. Ramp self-support
+    # scales in our favour as the knuckle shrinks: smaller knuckle = higher
+    # disc bottom = steeper (more vertical) ramp for the same flat. Angle
+    # from vertical at default mounting_flat = 1 mm:
+    #   FULL:  n/a (no ramp, knuckle bottom on bed)
+    #   HALF:  ~50° — past the strict 45° rule, but well within FDM's cooled
+    #          overhang capability (matches the user's printed-confirmed result)
+    #   SMALL: ~25° — comfortably self-supporting
     params = HingeParams(
         case_h=HINGE_WALL_H,                    # = WALL_H + PIVOT_Z_OFFSET
         hinge_length=HINGE_LENGTH,
         stations=STATIONS,
         knuckle=knuckle,
     )
-    leaf_outer = HINGE_WALL_H * knuckle.value / 100 + params.mounting_flat
+    leaf_outer = _resolved_po(knuckle) / 2 + params.mounting_flat
 
     cs, ps = make_hinge(params).solids()
     cs = cs.translate((0, 0, HINGE_WALL_H))    # pivot sits OFFSET above wall top
@@ -130,6 +151,7 @@ def main():
     variants = [
         ("clamshell_full", Knuckle.FULL, False),
         ("clamshell_half", Knuckle.HALF, False),
+        ("clamshell_small", Knuckle.SMALL, False),
         ("clamshell_magnets", Knuckle.HALF, True),
     ]
     for name, knuckle, magnets in variants:

@@ -33,10 +33,11 @@ variant (no magnets) for reference.
 
 ![knuckle options](docs/diagrams/knuckle_options.png)
 
-| `knuckle`     | knuckle diameter | ramp                  | gap between case walls (flat-open) |
-| ------------- | ---------------- | --------------------- | ---------------------------------- |
-| `Knuckle.FULL`| `2 × case_h`     | none — rests on bed   | `2 × (case_h + mounting_flat)`     |
-| `Knuckle.HALF`| `case_h`         | 45° self-supporting   | `case_h + 2 × mounting_flat`       |
+| `knuckle`      | knuckle diameter            | ramp                  | gap between case walls (flat-open) |
+| -------------- | --------------------------- | --------------------- | ---------------------------------- |
+| `Knuckle.FULL` | `2 × case_h`                | none — rests on bed   | `2 × (case_h + mounting_flat)`     |
+| `Knuckle.HALF` | `case_h`                    | 45° self-supporting   | `case_h + 2 × mounting_flat`       |
+| `Knuckle.SMALL`| `max(case_h / 2, 5 mm)`     | ~25° from vertical (smaller knuckle → naturally steeper) | `max(case_h, 10mm) + 2 × mounting_flat` |
 
 See [docs/clamshell-integration.md](docs/clamshell-integration.md) for
 mounting, orientation, multi-hinge layouts, and the closed-vs-open view.
@@ -79,7 +80,7 @@ The four primary inputs:
 | `case_h`       | (required)     | Case wall height; the hinge's "scale" reference          |
 | `hinge_length` | (required)     | Total hinge length along the axis (Y)                    |
 | `stations`     | 6              | Number of alternating cs/ps tabs (even, ≥ 2)             |
-| `knuckle`      | `Knuckle.FULL` | `FULL` (= 2·case_h diameter, no ramp) or `HALF` (= case_h diameter, 45° ramp) |
+| `knuckle`      | `Knuckle.FULL` | `FULL`, `HALF`, or `SMALL` — see the option table below |
 
 Three small tuneables:
 
