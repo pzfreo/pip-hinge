@@ -98,7 +98,7 @@ Three small tuneables:
 | ----------------- | ------- | -------------------------------------------------- |
 | `mounting_flat`   | 0.5     | Flat width past the disc edge for case-wall fusion. Below `pivot_clearance` (= 0.6 mm) the bare hinge fragments into multiple solids — fine when fused into a case, see docs |
 | `pivot_clearance` | 0.6     | Radial pin/bore gap (FDM tolerance)                |
-| `clasp_clearance` | `None`  | Axial gap between cs and ps tabs. `None` auto-picks **0.2 mm** for `Knuckle.SMALL` (matches r0berts' original tight value) and **0.4 mm** for `HALF`/`FULL` (relaxed for typical FDM) |
+| `clasp_clearance` | `None`  | Axial gap between cs and ps tabs. `None` auto-scales with knuckle diameter `Po`: 0.2 mm at Po ≤ 5 mm (matches r0berts' original), linear up to 0.4 mm at Po ≥ 10 mm. Pass an explicit value to override |
 
 Plus three pin-engagement constants from the original FreeCAD source
 (`pin_cyl_extra`, `pin_end_offset`, `pin_short_cyl_factor`) — leave at
