@@ -12,23 +12,29 @@ from pathlib import Path
 
 CASE_H = 10
 WALL_T = 2
-MOUNTING_FLAT = 1.0
 
-OPTIONS = [
-    ("FULL", 100),
-    ("HALF", 50),
-]
+# Per-option (name, Po, mounting_flat). All variants use the same default
+# 0.5 mm mounting_flat; ramp self-support angle scales naturally with knuckle
+# size (smaller knuckle = higher disc bottom = steeper ramp).
+def _options():
+    return [
+        ("FULL",  2 * CASE_H,            0.5),
+        ("HALF",  CASE_H,                0.5),
+        ("SMALL", max(CASE_H / 2, 5.0),  0.5),
+    ]
+
+
+OPTIONS = _options()
 
 PANEL_W = 50
 PANEL_H = 28
 PANEL_GAP = 2
 
 
-def panel(name: str, pct: float, y_off: float) -> str:
-    Po = 2 * CASE_H * pct / 100
+def panel(name: str, Po: float, mflat: float, y_off: float) -> str:
     Ro = Po / 2
     T = Ro
-    W = Ro + MOUNTING_FLAT
+    W = Ro + mflat
     gap = 2 * W
     rise = CASE_H - T
     ramp_angle = math.degrees(math.atan(rise / W)) if W > 0 else 90
@@ -104,7 +110,8 @@ def panel(name: str, pct: float, y_off: float) -> str:
         f'font-family="sans-serif" fill="#a40" text-anchor="middle">gap = {gap:.1f}mm</text>'
     )
 
-    if pct < 100:
+    is_full = Po >= 2 * CASE_H
+    if not is_full:
         vtx_x, vtx_y = pt(W, 0)
         parts.append(
             f'<text x="{vtx_x - 4.5:.2f}" y="{vtx_y - 1.5:.2f}" font-size="1.0" '
@@ -115,11 +122,11 @@ def panel(name: str, pct: float, y_off: float) -> str:
         f'<text x="1" y="{y_off + 1.6:.2f}" font-size="1.4" font-family="sans-serif" '
         f'font-weight="bold">Knuckle.{name}</text>'
     )
-    if pct >= 100:
+    if is_full:
         sub = f'Po = {Po:.0f}mm   W = {W:.1f}mm   gap = {gap:.1f}mm   (no ramp, knuckle rests on bed)'
     else:
         sub = (
-            f'Po = {Po:.0f}mm   W = {W:.1f}mm   gap = {gap:.1f}mm   '
+            f'Po = {Po:.1f}mm   W = {W:.1f}mm   gap = {gap:.1f}mm   '
             f'ramp = {ramp_angle:.0f}°  (self-supporting)'
         )
     parts.append(
@@ -134,8 +141,8 @@ def main() -> None:
     total_w = PANEL_W
     total_h = (PANEL_H + PANEL_GAP) * len(OPTIONS)
     body = '\n'.join(
-        panel(name, pct, i * (PANEL_H + PANEL_GAP))
-        for i, (name, pct) in enumerate(OPTIONS)
+        panel(name, Po, mflat, i * (PANEL_H + PANEL_GAP))
+        for i, (name, Po, mflat) in enumerate(OPTIONS)
     )
     svg = (
         f'<svg xmlns="http://www.w3.org/2000/svg" '

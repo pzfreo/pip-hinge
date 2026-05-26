@@ -26,15 +26,17 @@ cylinder_side, pin_side = hinge.solids()
 
 Everything else (knuckle diameter, leaf width, pin radius, pocket clearances)
 is derived from these four. Two small tuning knobs remain:
-`mounting_flat` (default 1 mm of flat past the disc edge for case-wall
-attachment), `pivot_clearance` (radial pin/bore gap), and `clasp_clearance`
-(axial gap between meshing tabs).
+`mounting_flat` (default 0.5 mm of flat past the disc edge for case-wall
+attachment — the cs body fragments into multiple solids at this size but
+they fuse into the case wall, see "Common gotchas" below), `pivot_clearance`
+(radial pin/bore gap), and `clasp_clearance` (axial gap between meshing
+tabs).
 
 ## The two knuckle options
 
 ![FULL vs HALF cross-section](diagrams/knuckle_options.png)
 
-Both panels above use `case_h = 10mm`, `mounting_flat = 1mm`.
+Both panels above use `case_h = 10mm`, `mounting_flat = 0.5mm` (the default).
 
 ### Knuckle.FULL  (Po = 2 × case_h)
 
@@ -60,6 +62,24 @@ Geometric properties:
 - Knuckle protrudes `case_h / 2` above the wall.
 - Gap between case walls when flat-open: `case_h + 2 × mounting_flat`.
 - Leaf has a sloped lower-inner face (the ramp).
+
+### Knuckle.SMALL  (Po = max(case_h / 2, 5 mm))
+
+The smallest knuckle the geometry will produce: 1/4 of FULL with a 5 mm
+absolute floor that keeps the bore + pin big enough to print reliably on
+a 0.4 mm-nozzle FDM regardless of case height. For `case_h ≥ 10 mm` the
+1/4-of-FULL ratio dominates; below that, the 5 mm floor kicks in.
+
+Geometric properties:
+- Knuckle protrudes `Po / 2` above the wall.
+- Ramp **steeper** than HALF's at the same `mounting_flat`. Counterintuitive
+  but true: a smaller knuckle puts the disc bottom higher above the bed,
+  so the leaf's ramp (from outer-bottom corner to disc bottom) rises more
+  per unit of horizontal travel. At default `mounting_flat = 0.5 mm`, the
+  ramp sits at ~22° from vertical — comfortably self-supporting (versus
+  HALF at ~48° which works in practice but is at the FDM-cooling limit).
+- Pin diameter for `case_h = 10 mm`: 1.9 mm — at the lower bound of
+  reliable FDM print. For smaller cases the 5 mm floor preserves this.
 
 ## Closed vs flat-open
 
@@ -139,9 +159,11 @@ lid_body  = lid_body  + ps_positioned
 
 The leaf's outer face (at `X = W`) is where the case wall attaches.
 `mounting_flat` controls the flat strip of leaf material past the disc edge
-that the wall actually glues / fuses to — 1 mm is the default and usually
-plenty for boolean union. Increase it for a larger glue surface at the cost
-of a wider gap between case halves.
+that the wall actually glues / fuses to — 0.5 mm is the default and is
+deliberately below the `pivot_clearance` so the cs body fragments at the
+disc-edge level. Those fragments still share their outer face with the case
+wall and fuse cleanly on boolean union. Increase `mounting_flat` for a
+larger glue surface at the cost of a wider gap between case halves.
 
 ### Multi-hinge variant
 
@@ -286,6 +308,16 @@ segmented.
 - **Increasing mounting_flat for HALF**: bigger mounting_flat means
   shallower ramp (still self-supporting). But the gap between case halves
   also grows. 1–2 mm is usually plenty for fusion.
+- **Reducing mounting_flat below pivot_clearance**: at very small
+  `mounting_flat` (< `pivot_clearance`, default 0.6 mm) the leaf strip at
+  X ∈ [Ro+Pc, W] collapses to zero/negative width — the bare `make_hinge()`
+  result then comes back as N/2 + ~N/2 fragmented solids instead of 2.
+  This is fine **as long as you fuse the hinge into a case**: each cs disc
+  tab and each ps fragment shares its outer face with the case wall and
+  fuses with it on boolean union. The case wall plays the role of the
+  vanished leaf strip. `examples/clamshell.py` does this via
+  `_split_hinge_by_side()`, which classifies the fragments by bbox X
+  centre rather than unpacking 2:2.
 - **Forgetting the pivot Z offset**: translating the hinge by exactly
   `case_h` gives zero design tolerance at the closed seam — any printed
   high spot then opens the front jaw. Use `case_h + 0.2 mm` as a starting
@@ -302,7 +334,7 @@ HingeParams(
     hinge_length    = back_edge_length,  # total length along the hinge axis
     stations        = 6,                 # default
     knuckle         = Knuckle.FULL,      # or HALF for a more compact knuckle
-    mounting_flat   = 1.0,               # mm of flat past the disc for fusion
+    mounting_flat   = 0.5,               # mm of flat past the disc for fusion (default)
     pivot_clearance = 0.6,               # default — works on most FDM printers
     clasp_clearance = 0.4,               # default
 )

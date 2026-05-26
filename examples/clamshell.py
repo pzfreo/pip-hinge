@@ -1,9 +1,15 @@
 """Worked example: small clamshell boxes with an integrated print-in-place hinge.
 
-Generates three variants:
+Generates four variants:
 
   examples/clamshell_full.{step,stl}     — Knuckle.FULL, bump-on-top knuckle
   examples/clamshell_half.{step,stl}     — Knuckle.HALF, smaller knuckle + ramp
+  examples/clamshell_small.{step,stl}    — Knuckle.SMALL, smallest printable
+                                            knuckle (1/4 of FULL, floored at
+                                            Po = 5 mm). Default mounting_flat
+                                            (0.5 mm); the smaller knuckle
+                                            naturally gives a steeper, more
+                                            self-supporting ramp.
   examples/clamshell_magnets.{step,stl}  — Knuckle.HALF + 4 corner magnet pockets,
                                             a useful little case on its own
 
@@ -104,16 +110,51 @@ def add_corner_magnet_pockets(half, x_sign: int, leaf_outer_x: float):
     return half
 
 
+def _resolved_po(knuckle: Knuckle) -> float:
+    """Po that ``hinge.py`` will compute internally for this knuckle option."""
+    if knuckle is Knuckle.SMALL:
+        return max(HINGE_WALL_H / 2, 5.0)
+    return 2 * HINGE_WALL_H * knuckle.value / 100
+
+
+def _split_hinge_by_side(hinge):
+    """Sort the hinge's solids into cs-side (+X bias) and ps-side (-X bias).
+
+    For most parameter combinations make_hinge() returns exactly 2 solids
+    and unpacking ``cs, ps = .solids()`` would suffice. But for small
+    ``mounting_flat`` (specifically ``mounting_flat < pivot_clearance``)
+    the cs leaf strip collapses to zero/negative width — the cs body then
+    fragments into N/2 disc tabs and the ps body similarly into several
+    pieces. The fragments are still valid: in a clamshell they each fuse
+    into the case wall and the printed solid is fine. We just have to
+    classify by bbox X-centre instead of unpacking.
+    """
+    cs, ps = [], []
+    for s in hinge.solids():
+        bb = s.bounding_box()
+        (cs if (bb.min.X + bb.max.X) >= 0 else ps).append(s)
+    return Compound(cs), Compound(ps)
+
+
 def build_clamshell(knuckle: Knuckle, magnets: bool = False):
+    # All three variants use the default mounting_flat = 0.5 mm. The leaf
+    # strip vanishes (mflat < pivot_clearance = 0.6) so the bare hinge
+    # comes back fragmented, but each fragment fuses to the case wall
+    # cleanly via _split_hinge_by_side() above. Ramp self-support scales
+    # in our favour as the knuckle shrinks. Ramp angle from vertical:
+    #   FULL:  n/a (no ramp, knuckle bottom on bed)
+    #   HALF:  ~48° — past the strict 45° rule, but well within FDM's cooled
+    #          overhang capability (matches the user's printed-confirmed result)
+    #   SMALL: ~22° — comfortably self-supporting
     params = HingeParams(
         case_h=HINGE_WALL_H,                    # = WALL_H + PIVOT_Z_OFFSET
         hinge_length=HINGE_LENGTH,
         stations=STATIONS,
         knuckle=knuckle,
     )
-    leaf_outer = HINGE_WALL_H * knuckle.value / 100 + params.mounting_flat
+    leaf_outer = _resolved_po(knuckle) / 2 + params.mounting_flat
 
-    cs, ps = make_hinge(params).solids()
+    cs, ps = _split_hinge_by_side(make_hinge(params))
     cs = cs.translate((0, 0, HINGE_WALL_H))    # pivot sits OFFSET above wall top
     ps = ps.translate((0, 0, HINGE_WALL_H))
 
@@ -130,6 +171,7 @@ def main():
     variants = [
         ("clamshell_full", Knuckle.FULL, False),
         ("clamshell_half", Knuckle.HALF, False),
+        ("clamshell_small", Knuckle.SMALL, False),
         ("clamshell_magnets", Knuckle.HALF, True),
     ]
     for name, knuckle, magnets in variants:

@@ -29,14 +29,25 @@ corner magnet pockets to latch the case shut. Both halves print as one
 piece in the orientation shown. The example also emits a bare HALF/FULL
 variant (no magnets) for reference.
 
+## Parameter reference
+
+![parameters guide](docs/diagrams/parameters_guide.png)
+
+Cross-section (Panel A) shows the spatial parameters: `case_h` (wall
+height), `PIVOT_Z_OFFSET` (extra lift), `mounting_flat` (flat past the
+disc edge), plus the derived `Po`/`Ro`/`T`/`W` and the pin/bore inset.
+Top view (Panel B) shows `hinge_length`, `stations`, derived
+`clasp_width`, and `clasp_clearance` between meshing tabs.
+
 ## The two knuckle options
 
 ![knuckle options](docs/diagrams/knuckle_options.png)
 
-| `knuckle`     | knuckle diameter | ramp                  | gap between case walls (flat-open) |
-| ------------- | ---------------- | --------------------- | ---------------------------------- |
-| `Knuckle.FULL`| `2 × case_h`     | none — rests on bed   | `2 × (case_h + mounting_flat)`     |
-| `Knuckle.HALF`| `case_h`         | 45° self-supporting   | `case_h + 2 × mounting_flat`       |
+| `knuckle`      | knuckle diameter            | ramp                  | gap between case walls (flat-open) |
+| -------------- | --------------------------- | --------------------- | ---------------------------------- |
+| `Knuckle.FULL` | `2 × case_h`                | none — rests on bed   | `2 × (case_h + mounting_flat)`     |
+| `Knuckle.HALF` | `case_h`                    | 45° self-supporting   | `case_h + 2 × mounting_flat`       |
+| `Knuckle.SMALL`| `max(case_h / 2, 5 mm)`     | ~25° from vertical (smaller knuckle → naturally steeper) | `max(case_h, 10mm) + 2 × mounting_flat` |
 
 See [docs/clamshell-integration.md](docs/clamshell-integration.md) for
 mounting, orientation, multi-hinge layouts, and the closed-vs-open view.
@@ -79,13 +90,13 @@ The four primary inputs:
 | `case_h`       | (required)     | Case wall height; the hinge's "scale" reference          |
 | `hinge_length` | (required)     | Total hinge length along the axis (Y)                    |
 | `stations`     | 6              | Number of alternating cs/ps tabs (even, ≥ 2)             |
-| `knuckle`      | `Knuckle.FULL` | `FULL` (= 2·case_h diameter, no ramp) or `HALF` (= case_h diameter, 45° ramp) |
+| `knuckle`      | `Knuckle.FULL` | `FULL`, `HALF`, or `SMALL` — see the option table below |
 
 Three small tuneables:
 
 | Parameter         | Default | Meaning                                            |
 | ----------------- | ------- | -------------------------------------------------- |
-| `mounting_flat`   | 1.0     | Flat width past the disc edge for case-wall fusion |
+| `mounting_flat`   | 0.5     | Flat width past the disc edge for case-wall fusion. Below `pivot_clearance` (= 0.6 mm) the bare hinge fragments into multiple solids — fine when fused into a case, see docs |
 | `pivot_clearance` | 0.6     | Radial pin/bore gap (FDM tolerance)                |
 | `clasp_clearance` | 0.4     | Axial gap between cs and ps tabs                   |
 
