@@ -15,21 +15,20 @@ Generates four variants:
 
 All three share two settings that came out of real printing & assembly:
 
-  PIVOT_Z_OFFSET = 0.2 mm
-      Raises the hinge axis 0.2 mm above the wall top. The closed lid then
-      sits 2·δ = 0.4 mm above the base instead of meeting it on a 0-tolerance
-      plane, so a high spot anywhere along the seam doesn't spring the
-      front jaw open. Without this the case rests slightly open under its
-      own elastic tension; with it, the front closes cleanly (and magnets,
-      if fitted, latch it shut).
+  pivot_z_offset = 0.2 mm  (default on HingeParams)
+      Raises the hinge axis 0.2 mm above the wall top. The closed lid
+      then sits 2·δ = 0.4 mm above the base instead of meeting it on a
+      0-tolerance plane, so a high spot anywhere along the seam doesn't
+      spring the front jaw open. Without this the case rests slightly
+      open under its own elastic tension; with it, the front closes
+      cleanly (and magnets, if fitted, latch it shut).
 
-      The HingeParams call below uses ``case_h = WALL_H + PIVOT_Z_OFFSET``
-      rather than ``WALL_H``. This sizes the knuckle to the pivot height
-      rather than the wall height, so the knuckle bottom always lands on
-      the bed (= the FULL-knuckle "rests on bed, no support" guarantee
-      still holds even with the offset). The wall stays WALL_H tall; the
-      leaf top sits OFFSET above the wall, which is exactly what raising
-      the pivot means.
+      The HingeParams call below passes ``case_h = WALL_H`` (the actual
+      wall height) and relies on the default ``pivot_z_offset = 0.2`` to
+      handle the lift. The hinge internally extends the leaf by
+      pivot_z_offset and lifts the disc so the axis sits at
+      ``WALL_H + pivot_z_offset`` once the hinge is positioned at the
+      wall top.
 
   MAGNET pockets (6 × 3 mm) at the four front corners of the magnet
       variant. The pockets sit inside cylindrical bosses pushed into the
@@ -39,8 +38,8 @@ All three share two settings that came out of real printing & assembly:
       or they'll repel when closed.
 
 Both halves are coplanar on the bed (Z = 0), with the hinge axis along Y
-through (X = 0, Z = case_h + PIVOT_Z_OFFSET). Base extends in +X, lid in −X.
-Print as one piece — no supports needed.
+through (X = 0, Z = WALL_H + pivot_z_offset). Base extends in +X, lid
+in −X. Print as one piece — no supports needed.
 """
 
 from __future__ import annotations
@@ -64,9 +63,7 @@ WALL_T = 2.5
 HINGE_LENGTH = 60.0
 STATIONS = 6
 
-# ── empirical tweak: see module docstring ─────────────────────────────────
-PIVOT_Z_OFFSET = 0.2
-HINGE_WALL_H = WALL_H + PIVOT_Z_OFFSET    # passed to HingeParams
+# HingeParams has pivot_z_offset = 0.2 mm by default — see module docstring.
 
 # ── magnet pocket geometry (6 mm × 3 mm neodymium discs) ──────────────────
 MAGNET_R = 3.0
@@ -110,13 +107,6 @@ def add_corner_magnet_pockets(half, x_sign: int, leaf_outer_x: float):
     return half
 
 
-def _resolved_po(knuckle: Knuckle) -> float:
-    """Po that ``hinge.py`` will compute internally for this knuckle option."""
-    if knuckle is Knuckle.SMALL:
-        return max(HINGE_WALL_H / 2, 5.0)
-    return 2 * HINGE_WALL_H * knuckle.value / 100
-
-
 def _split_hinge_by_side(hinge):
     """Sort the hinge's solids into cs-side (+X bias) and ps-side (-X bias).
 
@@ -147,16 +137,20 @@ def build_clamshell(knuckle: Knuckle, magnets: bool = False):
     #          overhang capability (matches the user's printed-confirmed result)
     #   SMALL: ~22° — comfortably self-supporting
     params = HingeParams(
-        case_h=HINGE_WALL_H,                    # = WALL_H + PIVOT_Z_OFFSET
+        case_h=WALL_H,                          # actual wall height
         hinge_length=HINGE_LENGTH,
         stations=STATIONS,
         knuckle=knuckle,
+        # pivot_z_offset defaults to 0.2 mm — see module docstring
     )
-    leaf_outer = _resolved_po(knuckle) / 2 + params.mounting_flat
+    # W is the leaf's outer face (X = Ro + mounting_flat), which is exactly
+    # where the case back wall sits. Pull it from the resolved params so we
+    # don't duplicate the knuckle-sizing formula here.
+    leaf_outer = params._resolve()["W"]
 
     cs, ps = _split_hinge_by_side(make_hinge(params))
-    cs = cs.translate((0, 0, HINGE_WALL_H))    # pivot sits OFFSET above wall top
-    ps = ps.translate((0, 0, HINGE_WALL_H))
+    cs = cs.translate((0, 0, WALL_H))           # hinge positions to wall top;
+    ps = ps.translate((0, 0, WALL_H))           # axis ends up at WALL_H + pivot_z_offset
 
     base = hollow_half(+1, leaf_outer) + cs
     lid = hollow_half(-1, leaf_outer) + ps

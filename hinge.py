@@ -39,6 +39,7 @@ from build123d import (
     Line,
     Plane,
     Polyline,
+    Pos,
     Sketch,
     export_step,
     export_stl,
@@ -74,6 +75,21 @@ class HingeParams:
     knuckle: Knuckle = Knuckle.FULL      # knuckle size
     mounting_flat: float = 0.5           # flat width past the disc edge (mm)
     pivot_clearance: float = 0.6         # radial pin/bore gap (mm)
+    pivot_z_offset: float = 0.2
+    """Empirical lift of the hinge axis above the case wall top (mm).
+
+    The leaf grows by this much in Z so the bed-side end of the leaf
+    still lands on the bed when the lifted axis is positioned at
+    ``case_h``; the bottom face of the disc sits ``pivot_z_offset``
+    above the wall top. When the case closes, the lid then sits
+    ``2 × pivot_z_offset`` above the base instead of meeting it on a
+    zero-tolerance plane — so a high spot anywhere along the seam
+    can't spring the front of the case open under elastic tension.
+
+    Default 0.2 mm matches the empirical value baked into the previous
+    clamshell example. Set to 0 to disable (knuckle bottom rests
+    directly on the wall top, no seam gap).
+    """
     clasp_clearance: Optional[float] = None
     """Axial gap between cs and ps tabs (mm).
 
@@ -102,14 +118,23 @@ class HingeParams:
             )
         if self.mounting_flat < 0:
             raise ValueError(f"mounting_flat must be ≥ 0 (got {self.mounting_flat})")
+        if self.pivot_z_offset < 0:
+            raise ValueError(f"pivot_z_offset must be ≥ 0 (got {self.pivot_z_offset})")
 
+        # Knuckle is sized to the LIFTED axis (case_h + pivot_z_offset), not just
+        # case_h. This preserves the "FULL knuckle bottom rests on bed when flat
+        # for printing" guarantee: with Ro = case_h + pz_off, the axis at Z =
+        # case_h + pz_off and Ro the same means the disc bottom lands at exactly
+        # Z = 0 (the bed). It also keeps the bottom segment of the leaf polyline
+        # horizontal at FULL (no spurious slope from the offset).
+        effective_case_h = self.case_h + self.pivot_z_offset
         if self.knuckle is Knuckle.SMALL:
             # 1/4 of FULL, floored at 5 mm so the pin & bore stay printable
             # at any case height. For case_h ≥ 10 mm the ratio dominates;
             # below that the 5 mm floor kicks in.
-            Po = max(self.case_h / 2, 5.0)
+            Po = max(effective_case_h / 2, 5.0)
         else:
-            Po = 2 * self.case_h * self.knuckle.value / 100
+            Po = 2 * effective_case_h * self.knuckle.value / 100
         Ro = Po / 2
         Pi = Po / 2                                  # bore diameter (= Ro)
         if Pi <= self.pivot_clearance:
@@ -135,7 +160,6 @@ class HingeParams:
             Cc = max(0.2, min(0.4, 0.04 * Po))
         else:
             Cc = self.clasp_clearance
-
         return {
             "case_h": self.case_h,
             "H": self.hinge_length,
@@ -148,6 +172,7 @@ class HingeParams:
             "W": Ro + self.mounting_flat,
             "Cw": Cw,
             "Cc": Cc,
+            "pivot_z_offset": self.pivot_z_offset,
             "pin_cyl_extra": self.pin_cyl_extra,
             "pin_end_offset": self.pin_end_offset,
             "pin_short": self.pin_short_cyl_factor,
@@ -272,6 +297,13 @@ def make_hinge(params: HingeParams = None) -> Compound:
         params = HingeParams(case_h=10.0, hinge_length=60.0)
     p = params._resolve()
     case_h, H, N = p["case_h"], p["H"], p["stations"]
+    pz_off = p["pivot_z_offset"]
+    # The hinge is built in coords where the disc centre is at Z=0; after
+    # construction we translate everything up by pz_off so the disc centre
+    # ends up at the lifted axis height when the caller positions the hinge
+    # to the wall top. The leaf must therefore extend down to Z = -leaf_h
+    # = -(case_h + pz_off), so its bed-side end lands at world Z = 0.
+    leaf_h = case_h + pz_off
     Ro, T, Po = p["Ro"], p["T"], p["Po"]
     Pi, Pc, W = p["Pi"], p["Pc"], p["W"]
     Cw, Cc = p["Cw"], p["Cc"]
@@ -279,14 +311,16 @@ def make_hinge(params: HingeParams = None) -> Compound:
     Ri = Pi / 2                              # bore radius
     Rp = Ri - Pc / 2                         # pin radius
     Xi = Ro + Pc                             # inner X boundary of pocket comb
-    pocket_extrude = case_h + Pc / 2
+    pocket_extrude = leaf_h + Pc / 2
 
     # ── cs (cylinder-side) leaf ──────────────────────────────────────────────
-    # Unified polyline: at FULL (T = case_h) the "ramp" segment from
-    # (W, -case_h) to (0, -T) lies flat on the bed; at HALF it slopes up
-    # at 45° (or shallower if mounting_flat > 0).
+    # Unified polyline. At FULL the knuckle is sized to the lifted axis
+    # (Ro = leaf_h), so T = leaf_h and the "ramp" segment from (W, -leaf_h)
+    # to (0, -T) is horizontal — knuckle bottom touches the bed, no overhang.
+    # At HALF/SMALL the disc bottom sits above the bed and the segment is a
+    # 45°-or-shallower self-supporting ramp.
     cs_profile = (
-        Polyline((Ro, 0), (W, 0), (W, -case_h), (0, -T))
+        Polyline((Ro, 0), (W, 0), (W, -leaf_h), (0, -T))
         + CenterArc(center=(0, 0), radius=Ro, start_angle=270, arc_size=-270)
     )
     cs_sketch = Sketch() + Plane.XZ * (make_face(cs_profile) - Circle(Ri))
@@ -300,7 +334,7 @@ def make_hinge(params: HingeParams = None) -> Compound:
 
     # ── ps (pin-side) leaf ───────────────────────────────────────────────────
     ps_profile = (
-        Polyline((-Ro, 0), (-W, 0), (-W, -case_h), (0, -T))
+        Polyline((-Ro, 0), (-W, 0), (-W, -leaf_h), (0, -T))
         + CenterArc(center=(0, 0), radius=Ro, start_angle=270, arc_size=270)
     )
     ps_sketch = Sketch() + Plane.XZ * make_face(ps_profile)
@@ -315,6 +349,13 @@ def make_hinge(params: HingeParams = None) -> Compound:
     for loop in loops[1:]:
         pin_sketch = pin_sketch + make_face(loop)
     pin_side = pin_side + revolve(pin_sketch, axis=Axis.Y, revolution_arc=-360)
+
+    # ── lift everything by pivot_z_offset so the axis sits above the
+    # leaf-top reference (= where the wall top will end up). Leaf top
+    # stays at local Z=0 (= wall top); axis ends up at Z=+pz_off.
+    if pz_off:
+        cylinder_side = Pos(0, 0, pz_off) * cylinder_side
+        pin_side = Pos(0, 0, pz_off) * pin_side
 
     # ── assemble into a 2-body Compound ─────────────────────────────────────
     builder = BRep_Builder()
