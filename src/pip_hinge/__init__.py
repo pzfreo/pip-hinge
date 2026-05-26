@@ -28,7 +28,6 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
 from typing import Optional
 
 from build123d import (
@@ -41,8 +40,6 @@ from build123d import (
     Polyline,
     Pos,
     Sketch,
-    export_step,
-    export_stl,
     extrude,
     make_face,
     revolve,
@@ -366,12 +363,4 @@ def make_hinge(params: HingeParams = None) -> Compound:
     return Compound(occ)
 
 
-if __name__ == "__main__":
-    out = Path(__file__).parent / "examples"
-    out.mkdir(exist_ok=True)
-    for name, knuckle in [("full", Knuckle.FULL), ("half", Knuckle.HALF)]:
-        h = make_hinge(HingeParams(case_h=10.0, hinge_length=60.0, knuckle=knuckle))
-        stem = out / f"hinge_{name}"
-        export_step(h, str(stem) + ".step")
-        export_stl(h, str(stem) + ".stl")
-        print(f"Exported {stem}.step / .stl")
+__all__ = ["HingeParams", "Knuckle", "make_hinge"]
