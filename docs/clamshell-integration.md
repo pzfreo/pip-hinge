@@ -220,25 +220,37 @@ def hollow_half(x_sign, leaf_outer_x):
                 align=align).translate((x_min + WALL_T, 0, WALL_T))
     return outer - inner
 
-params = HingeParams(case_h=CASE_H, hinge_length=64, knuckle=Knuckle.FULL)
-leaf_outer = CASE_H * params.knuckle.value / 100 + params.mounting_flat  # = W
+PIVOT_Z_OFFSET = 0.2                          # raise hinge 0.2 mm above wall top
+HINGE_CASE_H  = CASE_H + PIVOT_Z_OFFSET       # size knuckle to pivot height
+
+params = HingeParams(case_h=HINGE_CASE_H, hinge_length=64, knuckle=Knuckle.FULL)
+leaf_outer = HINGE_CASE_H * params.knuckle.value / 100 + params.mounting_flat  # = W
 
 cs, ps = make_hinge(params).solids()
-cs = cs.translate((0, 0, CASE_H))
-ps = ps.translate((0, 0, CASE_H))
+cs = cs.translate((0, 0, HINGE_CASE_H))       # pivot Z = wall top + offset
+ps = ps.translate((0, 0, HINGE_CASE_H))
 
 base = hollow_half(+1, leaf_outer) + cs
 lid  = hollow_half(-1, leaf_outer) + ps
 export_stl(Compound([base, lid]), "clamshell.stl")
 ```
 
-Two things easy to get wrong:
+Three things easy to get wrong:
 
 - The case back wall sits at **X = W** (= `Ro + mounting_flat`), not at the
   hinge axis. The wall's inner face attaches to the leaf's outer face there.
 - `base + lid` returns a `ShapeList` (one-shot boolean), not a `Compound` of
   two bodies. Wrap with `Compound([base, lid])` to keep them as separate
   print-in-place bodies.
+- Apply the 0.2 mm pivot Z offset to both the `case_h` you pass to
+  `HingeParams` **and** the Z translation. Without the offset, the lid and
+  base wall tops meet on a 0-tolerance plane and any high spot anywhere
+  along the seam springs the front jaw open by ~1 mm. Passing the offset
+  via `case_h` (rather than only translating by it) sizes the knuckle to
+  the pivot height, so the knuckle bottom still lands on the bed when
+  printed flat — important for `Knuckle.FULL`, where the "knuckle rests on
+  bed, no supports" guarantee depends on that. Add corner magnet pockets
+  if you want a positive latch (see `examples/clamshell.py`).
 
 ## Worked example: long box, 3 hinges
 
@@ -274,6 +286,11 @@ segmented.
 - **Increasing mounting_flat for HALF**: bigger mounting_flat means
   shallower ramp (still self-supporting). But the gap between case halves
   also grows. 1–2 mm is usually plenty for fusion.
+- **Forgetting the pivot Z offset**: translating the hinge by exactly
+  `case_h` gives zero design tolerance at the closed seam — any printed
+  high spot then opens the front jaw. Use `case_h + 0.2 mm` as a starting
+  point (0.4 mm closed-case back gap); magnets or finger pressure overcome
+  that easily, and the case stops resting slightly open.
 
 ## Quick reference
 

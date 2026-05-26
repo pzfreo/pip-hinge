@@ -21,11 +21,13 @@ bored knuckle tabs) and the pin-side leaf (with the integral pin).
 
 ## In context: a flat-open clamshell with HALF knuckle
 
-![clamshell with HALF knuckle, flat-open print orientation](docs/diagrams/clamshell_half_preview.png)
+![clamshell with HALF knuckle and corner magnet pockets, flat-open print orientation](docs/diagrams/clamshell_half_preview.png)
 
 Built by [`examples/clamshell.py`](examples/clamshell.py) — case_h = 10mm,
-80 × 50 mm footprint, 60 mm hinge with `Knuckle.HALF`. Both halves print
-as one piece in the orientation shown.
+80 × 50 mm footprint, 60 mm hinge with `Knuckle.HALF`, plus four 6 × 3 mm
+corner magnet pockets to latch the case shut. Both halves print as one
+piece in the orientation shown. The example also emits a bare HALF/FULL
+variant (no magnets) for reference.
 
 ## The two knuckle options
 
