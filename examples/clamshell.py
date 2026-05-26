@@ -117,6 +117,25 @@ def _resolved_po(knuckle: Knuckle) -> float:
     return 2 * HINGE_WALL_H * knuckle.value / 100
 
 
+def _split_hinge_by_side(hinge):
+    """Sort the hinge's solids into cs-side (+X bias) and ps-side (-X bias).
+
+    For most parameter combinations make_hinge() returns exactly 2 solids
+    and unpacking ``cs, ps = .solids()`` would suffice. But for small
+    ``mounting_flat`` (specifically ``mounting_flat < pivot_clearance``)
+    the cs leaf strip collapses to zero/negative width — the cs body then
+    fragments into N/2 disc tabs and the ps body similarly into several
+    pieces. The fragments are still valid: in a clamshell they each fuse
+    into the case wall and the printed solid is fine. We just have to
+    classify by bbox X-centre instead of unpacking.
+    """
+    cs, ps = [], []
+    for s in hinge.solids():
+        bb = s.bounding_box()
+        (cs if (bb.min.X + bb.max.X) >= 0 else ps).append(s)
+    return Compound(cs), Compound(ps)
+
+
 def build_clamshell(knuckle: Knuckle, magnets: bool = False):
     # All three variants use the same default mounting_flat. Ramp self-support
     # scales in our favour as the knuckle shrinks: smaller knuckle = higher
@@ -134,7 +153,7 @@ def build_clamshell(knuckle: Knuckle, magnets: bool = False):
     )
     leaf_outer = _resolved_po(knuckle) / 2 + params.mounting_flat
 
-    cs, ps = make_hinge(params).solids()
+    cs, ps = _split_hinge_by_side(make_hinge(params))
     cs = cs.translate((0, 0, HINGE_WALL_H))    # pivot sits OFFSET above wall top
     ps = ps.translate((0, 0, HINGE_WALL_H))
 

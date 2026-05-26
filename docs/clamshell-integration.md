@@ -304,6 +304,16 @@ segmented.
 - **Increasing mounting_flat for HALF**: bigger mounting_flat means
   shallower ramp (still self-supporting). But the gap between case halves
   also grows. 1–2 mm is usually plenty for fusion.
+- **Reducing mounting_flat below pivot_clearance**: at very small
+  `mounting_flat` (< `pivot_clearance`, default 0.6 mm) the leaf strip at
+  X ∈ [Ro+Pc, W] collapses to zero/negative width — the bare `make_hinge()`
+  result then comes back as N/2 + ~N/2 fragmented solids instead of 2.
+  This is fine **as long as you fuse the hinge into a case**: each cs disc
+  tab and each ps fragment shares its outer face with the case wall and
+  fuses with it on boolean union. The case wall plays the role of the
+  vanished leaf strip. `examples/clamshell.py` does this via
+  `_split_hinge_by_side()`, which classifies the fragments by bbox X
+  centre rather than unpacking 2:2.
 - **Forgetting the pivot Z offset**: translating the hinge by exactly
   `case_h` gives zero design tolerance at the closed seam — any printed
   high spot then opens the front jaw. Use `case_h + 0.2 mm` as a starting
