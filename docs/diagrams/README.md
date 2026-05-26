@@ -24,11 +24,11 @@ for n in ['knuckle_options', 'closed_vs_open']:
 ## 3D model preview (clamshell_half_preview.png)
 
 Rendered via [`build123d-mcp`](https://github.com/pzfreo/build123d-mcp)'s
-`render_view` tool from the model in `examples/clamshell_half.step`:
+`render_view` tool from the model in `examples/clamshell_magnets.step`:
 
 ```text
-import_cad_file("examples/clamshell_half.step", "clamshell")
-render_view(objects="clamshell", quality="high", azimuth=-25, elevation=15,
+import_cad_file("examples/clamshell_magnets.step", "case")
+render_view(objects="case", quality="high", azimuth=-25, elevation=25,
             save_to="docs/diagrams/clamshell_half_preview.png")
 ```
 
