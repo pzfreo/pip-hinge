@@ -80,11 +80,11 @@ Geometric properties:
   HALF at ~48° which works in practice but is at the FDM-cooling limit).
 - Pin diameter for `case_h = 10 mm`: 1.9 mm — at the lower bound of
   reliable FDM print. For smaller cases the 5 mm floor preserves this.
-- Auto-tightened `clasp_clearance = 0.2 mm` (matches r0berts' original
-  value, vs. 0.4 mm for HALF/FULL). With the smaller knuckle the
-  relative axial play would otherwise be 2× what it is on HALF; the
-  tighter clearance restores it. Pass an explicit `clasp_clearance`
-  to `HingeParams` if your printer can't hold 0.2 mm without fusing.
+- Auto-`clasp_clearance` scales with knuckle diameter Po: 0.2 mm at
+  Po = 5 mm (matches r0berts' original tight value), linear up to
+  0.4 mm at Po ≥ 10 mm. SMALL at the typical `case_h = 10 mm` lands
+  at 0.2 mm; a larger SMALL (e.g. case_h = 20 → Po = 10) auto-relaxes
+  to 0.4. Pass an explicit `clasp_clearance` to override.
 
 ## Closed vs flat-open
 

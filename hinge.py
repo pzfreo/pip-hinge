@@ -77,11 +77,12 @@ class HingeParams:
     clasp_clearance: Optional[float] = None
     """Axial gap between cs and ps tabs (mm).
 
-    Leave as ``None`` to use the size-aware default: 0.2 mm for
-    ``Knuckle.SMALL`` (matches the original r0berts FreeCAD value — the
-    tighter fit matters more when the rest of the hinge is small) and
-    0.4 mm for ``HALF`` and ``FULL`` (the relaxed value that prints
-    reliably on a standard 0.4 mm-nozzle FDM).
+    Leave as ``None`` to auto-scale with knuckle diameter ``Po``: 0.2 mm
+    at Po = 5 mm (matches the original r0berts FreeCAD value — the tighter
+    fit matters more when the knuckle is small), linearly up to 0.4 mm at
+    Po ≥ 10 mm (the relaxed value that prints reliably on a standard
+    0.4 mm-nozzle FDM). Formula: ``clamp(0.04 × Po, 0.2, 0.4)``. Pass an
+    explicit value to override.
     """
 
     # Pin-engagement constants hand-tuned in the original FreeCAD source.
@@ -125,10 +126,13 @@ class HingeParams:
                 stacklevel=2,
             )
 
-        # Size-aware clasp_clearance default: tighter (0.2) for SMALL,
-        # relaxed (0.4) for HALF/FULL. User can still override.
+        # Size-aware clasp_clearance default: scales linearly with knuckle
+        # diameter Po, from 0.2 mm at Po=5 mm to 0.4 mm at Po≥10 mm. The
+        # tighter fit matters more when the knuckle is small (relative
+        # play is bigger). Clamped both ends so very small or very large
+        # knuckles stay in the printable / sensible range.
         if self.clasp_clearance is None:
-            Cc = 0.2 if self.knuckle is Knuckle.SMALL else 0.4
+            Cc = max(0.2, min(0.4, 0.04 * Po))
         else:
             Cc = self.clasp_clearance
 
