@@ -13,7 +13,7 @@ case wall itself.
 ## The four inputs
 
 ```python
-from hinge import HingeParams, Knuckle, make_hinge
+from pip_hinge import HingeParams, Knuckle, make_hinge
 
 hinge = make_hinge(HingeParams(
     case_h        = 10,             # case wall height (mm)
@@ -234,7 +234,7 @@ Sketch:
 
 ```python
 from build123d import Align, Box, Compound, export_stl
-from hinge import HingeParams, Knuckle, make_hinge
+from pip_hinge import HingeParams, Knuckle, make_hinge
 
 CASE_H, CASE_W, CASE_D, WALL_T = 10, 80, 50, 2.5
 

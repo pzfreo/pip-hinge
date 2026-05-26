@@ -1,11 +1,22 @@
 [project]
 name = "pip-hinge"
-version = "0.1.0"
-description = "Parametric print-in-place piano hinge in build123d"
+version = "0.2.0"
+description = "Parametric print-in-place piano hinge for clamshell cases, in build123d"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Paul Fremantle", email = "pzfreo@gmail.com" }]
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "build123d>=0.6",
 ]
 
-[tool.uv]
-package = false
+[project.urls]
+Homepage = "https://github.com/pzfreo/pip-hinge"
+Issues = "https://github.com/pzfreo/pip-hinge/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pip_hinge"]

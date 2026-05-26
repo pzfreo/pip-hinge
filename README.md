@@ -6,7 +6,7 @@ designed for clamshell cases.
 Four inputs:
 
 ```python
-from hinge import HingeParams, Knuckle, make_hinge
+from pip_hinge import HingeParams, Knuckle, make_hinge
 
 hinge = make_hinge(HingeParams(
     case_h        = 10,             # case wall height (mm)
@@ -76,9 +76,30 @@ the configurable station count and ramp.
 
 ## Quick start
 
+Install from this repo into your own project (until it's on PyPI):
+
 ```bash
-uv pip install build123d
-python hinge.py    # writes examples/hinge_full.{step,stl} and hinge_half.{step,stl}
+uv pip install git+https://github.com/pzfreo/pip-hinge.git
+```
+
+Then in your build123d code:
+
+```python
+from pip_hinge import HingeParams, Knuckle, make_hinge
+
+hinge = make_hinge(HingeParams(
+    case_h=10, hinge_length=60, knuckle=Knuckle.FULL,
+))
+cylinder_side, pin_side = hinge.solids()    # or use _split_hinge_by_side helper
+```
+
+Or to play with it locally:
+
+```bash
+git clone https://github.com/pzfreo/pip-hinge.git && cd pip-hinge
+uv pip install -e .                          # editable install
+python examples/clamshell.py                 # writes clamshell_{full,half,small,magnets}.{step,stl}
+python examples/hinge_only.py                # writes the bare hinge_{full,half}.{step,stl}
 ```
 
 ## Parameters

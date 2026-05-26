@@ -45,14 +45,11 @@ in −X. Print as one piece — no supports needed.
 from __future__ import annotations
 
 import math
-import sys
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from build123d import Align, Box, Compound, Cylinder, export_step, export_stl
 
-from hinge import HingeParams, Knuckle, make_hinge
+from pip_hinge import HingeParams, Knuckle, make_hinge
 
 
 # ── case dimensions ───────────────────────────────────────────────────────
