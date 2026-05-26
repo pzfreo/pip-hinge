@@ -124,86 +124,88 @@ def panel_a():
         parts.append(f'<polygon points="{s}" fill="{leaf_color}" '
                      f'stroke="#1a4a8a" stroke-width="0.22"/>')
 
-    # Knuckle disc
+    # Knuckle disc (cs side, with bore visible — pin shown only in the callout)
     dx, dy = pt(0, HINGE_CASE_H)
     parts.append(f'<circle cx="{dx:.2f}" cy="{dy:.2f}" r="{Ro:.2f}" '
                  f'fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.25"/>')
-    # Pin (bore circle visible on cs side)
     parts.append(f'<circle cx="{dx:.2f}" cy="{dy:.2f}" r="{Pi/2:.2f}" '
                  f'fill="white" stroke="#3a2a00" stroke-width="0.18"/>')
-    parts.append(f'<circle cx="{dx:.2f}" cy="{dy:.2f}" r="{Rp:.2f}" '
-                 f'fill="#444" stroke="none"/>')
 
-    # Vertical dim: case_h (WALL_H), on far left
-    parts.append(dim_v(lwx - 4, pt(0, 0)[1], pt(0, WALL_H)[1],
+    # Five key spatial dimensions only — Ro/T are derived (= Po/2) so they
+    # don't get their own dim lines; they're explained in the label of Po.
+
+    # 1. case_h on far left
+    parts.append(dim_v(lwx - 3, pt(0, 0)[1], pt(0, WALL_H)[1],
                        f"case_h = {WALL_H:.0f}"))
 
-    # Vertical dim: PIVOT_Z_OFFSET, on far left, above case_h
-    parts.append(dim_v(lwx - 4, pt(0, WALL_H)[1], pt(0, HINGE_CASE_H)[1],
-                       "PIVOT_Z_OFFSET", label_offset=-12.5))
-    parts.append(f'<text x="{lwx-4:.2f}" y="{pt(0,HINGE_CASE_H)[1]-1.6:.2f}" '
-                 f'{TICK_FONT} fill="{PARAM_COLOR}" text-anchor="middle">'
-                 f'(case-design)</text>')
+    # 2. PIVOT_Z_OFFSET on far left, above case_h. Label set further out
+    #    because the dimension itself is tiny (0.2 mm).
+    pzo_y_mid = (pt(0, WALL_H)[1] + pt(0, HINGE_CASE_H)[1]) / 2
+    parts.append(dim_v(lwx - 3, pt(0, WALL_H)[1], pt(0, HINGE_CASE_H)[1],
+                       "", label_offset=0))
+    parts.append(f'<text x="{lwx - 4.5:.2f}" y="{pzo_y_mid - 2:.2f}" '
+                 f'{LABEL_FONT} fill="{PARAM_COLOR}" text-anchor="end">'
+                 f'PIVOT_Z_OFFSET</text>')
+    parts.append(f'<text x="{lwx - 4.5:.2f}" y="{pzo_y_mid - 0.6:.2f}" '
+                 f'{TICK_FONT} fill="{PARAM_COLOR}" text-anchor="end">'
+                 f'= {PIVOT_Z_OFFSET}</text>')
 
-    # Vertical dim: Po (knuckle diameter)
-    dim_x = cx + Ro + 5
-    parts.append(dim_v(dim_x, pt(0, HINGE_CASE_H - Ro)[1], pt(0, HINGE_CASE_H + Ro)[1],
-                       f"Po = {Po:.1f}", color=DERIVED_COLOR, label_offset=3.5))
-    parts.append(f'<text x="{dim_x+3.5:.2f}" y="{pt(0, HINGE_CASE_H)[1]+0.2:.2f}" '
-                 f'{TICK_FONT} fill="{DERIVED_COLOR}">(= 2·Ro)</text>')
+    # 3. Po on the right of the disc — vertical caliper
+    po_dim_x = cx + Ro + 4
+    parts.append(dim_v(po_dim_x, pt(0, HINGE_CASE_H - Ro)[1], pt(0, HINGE_CASE_H + Ro)[1],
+                       f"Po = {Po:.1f}", color=DERIVED_COLOR, label_offset=2.5))
+    parts.append(f'<text x="{po_dim_x + 2.5:.2f}" y="{pt(0, HINGE_CASE_H)[1] + 1.4:.2f}" '
+                 f'{TICK_FONT} fill="{DERIVED_COLOR}">(Ro = Po/2, T = Ro)</text>')
 
-    # Vertical dim: T = Ro, between disc bottom and pivot (=axis Z)
-    parts.append(dim_v(cx + 1, pt(0, HINGE_CASE_H - T)[1], pt(0, HINGE_CASE_H)[1],
-                       f"T = Ro", color=DERIVED_COLOR, label_offset=-3.0))
-
-    # Horizontal dim: W = Ro + mounting_flat at the leaf top
+    # 4. W on the leaf top, ABOVE the leaf (one row only)
+    leaf_top_y = pt(0, HINGE_CASE_H)[1] - 3.5
     parts.append(dim_h(pt(0, HINGE_CASE_H)[0], pt(W, HINGE_CASE_H)[0],
-                       pt(0, HINGE_CASE_H)[1] - 2.5, f"W = {W:.1f}",
-                       color=DERIVED_COLOR))
-
-    # Horizontal dim: mounting_flat (the part of W beyond Ro)
-    parts.append(dim_h(pt(Ro, HINGE_CASE_H)[0], pt(W, HINGE_CASE_H)[0],
-                       pt(0, HINGE_CASE_H)[1] - 4.5,
-                       f"mounting_flat = {MOUNTING_FLAT}", label_offset=-1.0))
-
-    # Horizontal dim: Ro at the same level
-    parts.append(dim_h(pt(0, HINGE_CASE_H)[0], pt(Ro, HINGE_CASE_H)[0],
-                       pt(0, HINGE_CASE_H)[1] - 4.5, f"Ro = {Ro:.1f}",
+                       leaf_top_y, f"W = Ro + mounting_flat = {W:.1f}",
                        color=DERIVED_COLOR, label_offset=-1.0))
 
-    # Pin closeup callout
-    callout_x = cx + 18
-    callout_y = bed_y - 18
-    callout_r = 6
-    parts.append(f'<circle cx="{callout_x}" cy="{callout_y}" r="{callout_r}" '
-                 f'fill="white" stroke="#888" stroke-width="0.2"/>')
-    # Magnified pin/bore (scale 3x)
+    # 5. mounting_flat alone, on the bottom edge of the leaf (clear of the
+    #    W label above), pointing down so its label sits below the leaf bottom.
+    mflat_y = pt(W, 0)[1] + 2.5
+    parts.append(dim_h(pt(Ro, 0)[0], pt(W, 0)[0], mflat_y,
+                       f"mounting_flat = {MOUNTING_FLAT}", label_offset=1.3))
+
+    # Pin closeup callout — placed in the upper-right empty space, well
+    # clear of the cross-section and its dimension lines.
     scale = 3
+    callout_r = max(Pi/2, Rp) * scale + 2     # comfortably contains the magnified bore
+    callout_x = PANEL_A_W - callout_r - 2     # snug to the right edge
+    callout_y = 8 + callout_r                 # below the panel title
+    parts.append(f'<circle cx="{callout_x:.2f}" cy="{callout_y:.2f}" r="{callout_r:.2f}" '
+                 f'fill="white" stroke="#888" stroke-width="0.2"/>')
     pin_cx = callout_x
     pin_cy = callout_y
-    parts.append(f'<circle cx="{pin_cx}" cy="{pin_cy}" r="{Pi/2*scale:.2f}" '
-                 f'fill="rgba(220,170,70,0.3)" stroke="#3a2a00" stroke-width="0.2"/>')
-    parts.append(f'<circle cx="{pin_cx}" cy="{pin_cy}" r="{Rp*scale:.2f}" '
-                 f'fill="#444" stroke="none"/>')
-    # Annotations on callout
-    parts.append(f'<text x="{callout_x}" y="{callout_y - callout_r - 0.5}" '
-                 f'{TICK_FONT} fill="#666" text-anchor="middle">pin / bore (3×)</text>')
-    parts.append(dim_h(pin_cx - Pi/2*scale, pin_cx + Pi/2*scale, pin_cy + 4.5,
-                       f"Pi = {Pi:.1f}", color=DERIVED_COLOR, label_offset=-1.0))
-    parts.append(dim_h(pin_cx - Rp*scale, pin_cx + Rp*scale, pin_cy + 6.5,
-                       f"2·Rp = {2*Rp:.1f}", color=DERIVED_COLOR, label_offset=-1.0))
-    # pivot_clearance gap arrow
-    parts.append(f'<line x1="{pin_cx + Rp*scale:.2f}" y1="{pin_cy-3:.2f}" '
-                 f'x2="{pin_cx + Pi/2*scale:.2f}" y2="{pin_cy-3:.2f}" '
-                 f'stroke="{PARAM_COLOR}" stroke-width="0.2"/>')
-    parts.append(f'<text x="{pin_cx + Rp*scale + 0.5:.2f}" y="{pin_cy-4:.2f}" '
-                 f'{TICK_FONT} fill="{PARAM_COLOR}">'
-                 f'pivot_clearance/2 = {PC/2}</text>')
+    # bore (light yellow + outline)
+    parts.append(f'<circle cx="{pin_cx:.2f}" cy="{pin_cy:.2f}" r="{Pi/2*scale:.2f}" '
+                 f'fill="rgba(220,170,70,0.25)" stroke="#3a2a00" stroke-width="0.2"/>')
+    # pin (cool grey outline)
+    parts.append(f'<circle cx="{pin_cx:.2f}" cy="{pin_cy:.2f}" r="{Rp*scale:.2f}" '
+                 f'fill="rgba(100,120,150,0.35)" stroke="#1a3a60" stroke-width="0.2"/>')
+    # Title above the callout
+    parts.append(f'<text x="{callout_x:.2f}" y="{callout_y - callout_r - 0.6:.2f}" '
+                 f'{TICK_FONT} fill="#666" text-anchor="middle">pin / bore detail (3×)</text>')
 
-    # Callout leader line
+    # Labels to the LEFT of the callout, stacked vertically (won't collide
+    # with the disc / dimension lines which are far below in panel space).
+    label_x = callout_x - callout_r - 1
+    parts.append(f'<text x="{label_x:.2f}" y="{callout_y - 1.6:.2f}" '
+                 f'{TICK_FONT} fill="{DERIVED_COLOR}" text-anchor="end">'
+                 f'Pi = {Pi:.1f} (bore Ø)</text>')
+    parts.append(f'<text x="{label_x:.2f}" y="{callout_y - 0.2:.2f}" '
+                 f'{TICK_FONT} fill="{DERIVED_COLOR}" text-anchor="end">'
+                 f'2·Rp = {2*Rp:.1f} (pin Ø)</text>')
+    parts.append(f'<text x="{label_x:.2f}" y="{callout_y + 1.2:.2f}" '
+                 f'{TICK_FONT} fill="{PARAM_COLOR}" text-anchor="end">'
+                 f'pivot_clearance = {PC} (radial gap × 2)</text>')
+
+    # Leader line from disc to callout
     cs_dx, cs_dy = pt(0, HINGE_CASE_H)
-    parts.append(f'<line x1="{cs_dx + Rp:.2f}" y1="{cs_dy:.2f}" '
-                 f'x2="{callout_x - callout_r*0.7:.2f}" y2="{callout_y - callout_r*0.7:.2f}" '
+    parts.append(f'<line x1="{cs_dx + Pi/2:.2f}" y1="{cs_dy:.2f}" '
+                 f'x2="{callout_x - callout_r*0.7:.2f}" y2="{callout_y + callout_r*0.7:.2f}" '
                  f'stroke="#888" stroke-width="0.18" stroke-dasharray="0.5,0.5"/>')
 
     parts.append('</g>')
