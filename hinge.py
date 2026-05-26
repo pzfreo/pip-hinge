@@ -71,7 +71,7 @@ class HingeParams:
     hinge_length: float                  # total hinge length along the axis (mm)
     stations: int = 6                    # alternating cs/ps tab count (even, ≥ 2)
     knuckle: Knuckle = Knuckle.FULL      # knuckle size
-    mounting_flat: float = 1.0           # flat width past the disc edge (mm)
+    mounting_flat: float = 0.5           # flat width past the disc edge (mm)
     pivot_clearance: float = 0.6         # radial pin/bore gap (mm)
     clasp_clearance: float = 0.4         # axial gap between cs and ps tabs (mm)
 

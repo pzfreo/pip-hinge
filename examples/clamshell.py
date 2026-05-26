@@ -6,8 +6,8 @@ Generates four variants:
   examples/clamshell_half.{step,stl}     — Knuckle.HALF, smaller knuckle + ramp
   examples/clamshell_small.{step,stl}    — Knuckle.SMALL, smallest printable
                                             knuckle (1/4 of FULL, floored at
-                                            Po = 5 mm). Same default mounting_flat
-                                            as the others; the smaller knuckle
+                                            Po = 5 mm). Default mounting_flat
+                                            (0.5 mm); the smaller knuckle
                                             naturally gives a steeper, more
                                             self-supporting ramp.
   examples/clamshell_magnets.{step,stl}  — Knuckle.HALF + 4 corner magnet pockets,
@@ -137,14 +137,15 @@ def _split_hinge_by_side(hinge):
 
 
 def build_clamshell(knuckle: Knuckle, magnets: bool = False):
-    # All three variants use the same default mounting_flat. Ramp self-support
-    # scales in our favour as the knuckle shrinks: smaller knuckle = higher
-    # disc bottom = steeper (more vertical) ramp for the same flat. Angle
-    # from vertical at default mounting_flat = 1 mm:
+    # All three variants use the default mounting_flat = 0.5 mm. The leaf
+    # strip vanishes (mflat < pivot_clearance = 0.6) so the bare hinge
+    # comes back fragmented, but each fragment fuses to the case wall
+    # cleanly via _split_hinge_by_side() above. Ramp self-support scales
+    # in our favour as the knuckle shrinks. Ramp angle from vertical:
     #   FULL:  n/a (no ramp, knuckle bottom on bed)
-    #   HALF:  ~50° — past the strict 45° rule, but well within FDM's cooled
+    #   HALF:  ~48° — past the strict 45° rule, but well within FDM's cooled
     #          overhang capability (matches the user's printed-confirmed result)
-    #   SMALL: ~25° — comfortably self-supporting
+    #   SMALL: ~22° — comfortably self-supporting
     params = HingeParams(
         case_h=HINGE_WALL_H,                    # = WALL_H + PIVOT_Z_OFFSET
         hinge_length=HINGE_LENGTH,

@@ -50,18 +50,18 @@
 <line x1="46" y1="25.00" x2="45.30" y2="25.90" stroke="#999" stroke-width="0.1"/>
 <line x1="47" y1="25.00" x2="46.30" y2="25.90" stroke="#999" stroke-width="0.1"/>
 <line x1="48" y1="25.00" x2="47.30" y2="25.90" stroke="#999" stroke-width="0.1"/>
-<rect x="36.00" y="15.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
-<rect x="12.00" y="15.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
-<polygon points="35.00,15.00 36.00,15.00 36.00,25.00 25.00,25.00" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
-<polygon points="15.00,15.00 14.00,15.00 14.00,25.00 25.00,25.00" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
+<rect x="35.50" y="15.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
+<rect x="12.50" y="15.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
+<polygon points="35.00,15.00 35.50,15.00 35.50,25.00 25.00,25.00" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
+<polygon points="15.00,15.00 14.50,15.00 14.50,25.00 25.00,25.00" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
 <circle cx="25.00" cy="15.00" r="10.00" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.3"/>
 <circle cx="25.00" cy="15.00" r="2.20" fill="#222"/>
-<line x1="14.00" y1="27.50" x2="36.00" y2="27.50" stroke="#a40" stroke-width="0.3"/>
-<line x1="14.00" y1="26.90" x2="14.00" y2="28.10" stroke="#a40" stroke-width="0.3"/>
-<line x1="36.00" y1="26.90" x2="36.00" y2="28.10" stroke="#a40" stroke-width="0.3"/>
-<text x="25.00" y="29.50" font-size="1.0" font-family="sans-serif" fill="#a40" text-anchor="middle">gap = 22.0mm</text>
+<line x1="14.50" y1="27.50" x2="35.50" y2="27.50" stroke="#a40" stroke-width="0.3"/>
+<line x1="14.50" y1="26.90" x2="14.50" y2="28.10" stroke="#a40" stroke-width="0.3"/>
+<line x1="35.50" y1="26.90" x2="35.50" y2="28.10" stroke="#a40" stroke-width="0.3"/>
+<text x="25.00" y="29.50" font-size="1.0" font-family="sans-serif" fill="#a40" text-anchor="middle">gap = 21.0mm</text>
 <text x="1" y="1.60" font-size="1.4" font-family="sans-serif" font-weight="bold">Knuckle.FULL</text>
-<text x="1" y="3.10" font-size="1.0" font-family="sans-serif" fill="#555">Po = 20mm   W = 11.0mm   gap = 22.0mm   (no ramp, knuckle rests on bed)</text>
+<text x="1" y="3.10" font-size="1.0" font-family="sans-serif" fill="#555">Po = 20mm   W = 10.5mm   gap = 21.0mm   (no ramp, knuckle rests on bed)</text>
 </g>
 <g>
 <rect x="0.1" y="30.10" width="49.80" height="27.80" fill="#fafafa" stroke="#ccc" stroke-width="0.1"/>
@@ -114,19 +114,19 @@
 <line x1="46" y1="55.00" x2="45.30" y2="55.90" stroke="#999" stroke-width="0.1"/>
 <line x1="47" y1="55.00" x2="46.30" y2="55.90" stroke="#999" stroke-width="0.1"/>
 <line x1="48" y1="55.00" x2="47.30" y2="55.90" stroke="#999" stroke-width="0.1"/>
-<rect x="31.00" y="45.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
-<rect x="17.00" y="45.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
-<polygon points="30.00,45.00 31.00,45.00 31.00,55.00 25.00,50.00" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
-<polygon points="20.00,45.00 19.00,45.00 19.00,55.00 25.00,50.00" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
+<rect x="30.50" y="45.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
+<rect x="17.50" y="45.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
+<polygon points="30.00,45.00 30.50,45.00 30.50,55.00 25.00,50.00" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
+<polygon points="20.00,45.00 19.50,45.00 19.50,55.00 25.00,50.00" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
 <circle cx="25.00" cy="45.00" r="5.00" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.3"/>
 <circle cx="25.00" cy="45.00" r="1.10" fill="#222"/>
-<line x1="19.00" y1="57.50" x2="31.00" y2="57.50" stroke="#a40" stroke-width="0.3"/>
-<line x1="19.00" y1="56.90" x2="19.00" y2="58.10" stroke="#a40" stroke-width="0.3"/>
-<line x1="31.00" y1="56.90" x2="31.00" y2="58.10" stroke="#a40" stroke-width="0.3"/>
-<text x="25.00" y="59.50" font-size="1.0" font-family="sans-serif" fill="#a40" text-anchor="middle">gap = 12.0mm</text>
-<text x="26.50" y="53.50" font-size="1.0" font-family="sans-serif" fill="#1a4a8a">40°</text>
+<line x1="19.50" y1="57.50" x2="30.50" y2="57.50" stroke="#a40" stroke-width="0.3"/>
+<line x1="19.50" y1="56.90" x2="19.50" y2="58.10" stroke="#a40" stroke-width="0.3"/>
+<line x1="30.50" y1="56.90" x2="30.50" y2="58.10" stroke="#a40" stroke-width="0.3"/>
+<text x="25.00" y="59.50" font-size="1.0" font-family="sans-serif" fill="#a40" text-anchor="middle">gap = 11.0mm</text>
+<text x="26.00" y="53.50" font-size="1.0" font-family="sans-serif" fill="#1a4a8a">42°</text>
 <text x="1" y="31.60" font-size="1.4" font-family="sans-serif" font-weight="bold">Knuckle.HALF</text>
-<text x="1" y="33.10" font-size="1.0" font-family="sans-serif" fill="#555">Po = 10.0mm   W = 6.0mm   gap = 12.0mm   ramp = 40°  (self-supporting)</text>
+<text x="1" y="33.10" font-size="1.0" font-family="sans-serif" fill="#555">Po = 10.0mm   W = 5.5mm   gap = 11.0mm   ramp = 42°  (self-supporting)</text>
 </g>
 <g>
 <rect x="0.1" y="60.10" width="49.80" height="27.80" fill="#fafafa" stroke="#ccc" stroke-width="0.1"/>
@@ -179,18 +179,18 @@
 <line x1="46" y1="85.00" x2="45.30" y2="85.90" stroke="#999" stroke-width="0.1"/>
 <line x1="47" y1="85.00" x2="46.30" y2="85.90" stroke="#999" stroke-width="0.1"/>
 <line x1="48" y1="85.00" x2="47.30" y2="85.90" stroke="#999" stroke-width="0.1"/>
-<rect x="28.50" y="75.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
-<rect x="19.50" y="75.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
-<polygon points="27.50,75.00 28.50,75.00 28.50,85.00 25.00,77.50" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
-<polygon points="22.50,75.00 21.50,75.00 21.50,85.00 25.00,77.50" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
+<rect x="28.00" y="75.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
+<rect x="20.00" y="75.00" width="2" height="10" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
+<polygon points="27.50,75.00 28.00,75.00 28.00,85.00 25.00,77.50" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
+<polygon points="22.50,75.00 22.00,75.00 22.00,85.00 25.00,77.50" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
 <circle cx="25.00" cy="75.00" r="2.50" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.3"/>
 <circle cx="25.00" cy="75.00" r="0.55" fill="#222"/>
-<line x1="21.50" y1="87.50" x2="28.50" y2="87.50" stroke="#a40" stroke-width="0.3"/>
-<line x1="21.50" y1="86.90" x2="21.50" y2="88.10" stroke="#a40" stroke-width="0.3"/>
-<line x1="28.50" y1="86.90" x2="28.50" y2="88.10" stroke="#a40" stroke-width="0.3"/>
-<text x="25.00" y="89.50" font-size="1.0" font-family="sans-serif" fill="#a40" text-anchor="middle">gap = 7.0mm</text>
-<text x="24.00" y="83.50" font-size="1.0" font-family="sans-serif" fill="#1a4a8a">65°</text>
+<line x1="22.00" y1="87.50" x2="28.00" y2="87.50" stroke="#a40" stroke-width="0.3"/>
+<line x1="22.00" y1="86.90" x2="22.00" y2="88.10" stroke="#a40" stroke-width="0.3"/>
+<line x1="28.00" y1="86.90" x2="28.00" y2="88.10" stroke="#a40" stroke-width="0.3"/>
+<text x="25.00" y="89.50" font-size="1.0" font-family="sans-serif" fill="#a40" text-anchor="middle">gap = 6.0mm</text>
+<text x="23.50" y="83.50" font-size="1.0" font-family="sans-serif" fill="#1a4a8a">68°</text>
 <text x="1" y="61.60" font-size="1.4" font-family="sans-serif" font-weight="bold">Knuckle.SMALL</text>
-<text x="1" y="63.10" font-size="1.0" font-family="sans-serif" fill="#555">Po = 5.0mm   W = 3.5mm   gap = 7.0mm   ramp = 65°  (self-supporting)</text>
+<text x="1" y="63.10" font-size="1.0" font-family="sans-serif" fill="#555">Po = 5.0mm   W = 3.0mm   gap = 6.0mm   ramp = 68°  (self-supporting)</text>
 </g>
 </svg>

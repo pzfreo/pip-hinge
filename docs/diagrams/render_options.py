@@ -14,13 +14,13 @@ CASE_H = 10
 WALL_T = 2
 
 # Per-option (name, Po, mounting_flat). All variants use the same default
-# 1 mm mounting_flat; ramp self-support angle scales naturally with knuckle
+# 0.5 mm mounting_flat; ramp self-support angle scales naturally with knuckle
 # size (smaller knuckle = higher disc bottom = steeper ramp).
 def _options():
     return [
-        ("FULL",  2 * CASE_H,            1.0),
-        ("HALF",  CASE_H,                1.0),
-        ("SMALL", max(CASE_H / 2, 5.0),  1.0),
+        ("FULL",  2 * CASE_H,            0.5),
+        ("HALF",  CASE_H,                0.5),
+        ("SMALL", max(CASE_H / 2, 5.0),  0.5),
     ]
 
 

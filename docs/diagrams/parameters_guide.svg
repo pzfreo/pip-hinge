@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 72" width="1600" height="1152">
+<g>
+<rect x="0.1" y="0.1" width="99.8" height="37.8" fill="#fafafa" stroke="#ccc" stroke-width="0.1"/>
+<text x="1" y="2.5" font-family="sans-serif" font-size="1.2" font-weight="bold">Panel A — Cross-section (X-Z plane)</text>
+<text x="1" y="4.2" font-family="sans-serif" font-size="1.0" fill="#666">WALL_H=10.0, PIVOT_Z_OFFSET=0.2, Knuckle.HALF, mounting_flat=0.5</text>
+<line x1="1" y1="35.00" x2="99" y2="35.00" stroke="#444" stroke-width="0.3"/>
+<line x1="1" y1="35.00" x2="0.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="2" y1="35.00" x2="1.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="3" y1="35.00" x2="2.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="4" y1="35.00" x2="3.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="5" y1="35.00" x2="4.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="6" y1="35.00" x2="5.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="7" y1="35.00" x2="6.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="8" y1="35.00" x2="7.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="9" y1="35.00" x2="8.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="10" y1="35.00" x2="9.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="11" y1="35.00" x2="10.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="12" y1="35.00" x2="11.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="13" y1="35.00" x2="12.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="14" y1="35.00" x2="13.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="15" y1="35.00" x2="14.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="16" y1="35.00" x2="15.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="17" y1="35.00" x2="16.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="18" y1="35.00" x2="17.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="19" y1="35.00" x2="18.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="20" y1="35.00" x2="19.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="21" y1="35.00" x2="20.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="22" y1="35.00" x2="21.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="23" y1="35.00" x2="22.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="24" y1="35.00" x2="23.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="25" y1="35.00" x2="24.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="26" y1="35.00" x2="25.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="27" y1="35.00" x2="26.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="28" y1="35.00" x2="27.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="29" y1="35.00" x2="28.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="30" y1="35.00" x2="29.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="31" y1="35.00" x2="30.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="32" y1="35.00" x2="31.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="33" y1="35.00" x2="32.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="34" y1="35.00" x2="33.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="35" y1="35.00" x2="34.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="36" y1="35.00" x2="35.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="37" y1="35.00" x2="36.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="38" y1="35.00" x2="37.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="39" y1="35.00" x2="38.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="40" y1="35.00" x2="39.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="41" y1="35.00" x2="40.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="42" y1="35.00" x2="41.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="43" y1="35.00" x2="42.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="44" y1="35.00" x2="43.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="45" y1="35.00" x2="44.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="46" y1="35.00" x2="45.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="47" y1="35.00" x2="46.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="48" y1="35.00" x2="47.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="49" y1="35.00" x2="48.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="50" y1="35.00" x2="49.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="51" y1="35.00" x2="50.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="52" y1="35.00" x2="51.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="53" y1="35.00" x2="52.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="54" y1="35.00" x2="53.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="55" y1="35.00" x2="54.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="56" y1="35.00" x2="55.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="57" y1="35.00" x2="56.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="58" y1="35.00" x2="57.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="59" y1="35.00" x2="58.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="60" y1="35.00" x2="59.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="61" y1="35.00" x2="60.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="62" y1="35.00" x2="61.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="63" y1="35.00" x2="62.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="64" y1="35.00" x2="63.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="65" y1="35.00" x2="64.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="66" y1="35.00" x2="65.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="67" y1="35.00" x2="66.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="68" y1="35.00" x2="67.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="69" y1="35.00" x2="68.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="70" y1="35.00" x2="69.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="71" y1="35.00" x2="70.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="72" y1="35.00" x2="71.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="73" y1="35.00" x2="72.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="74" y1="35.00" x2="73.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="75" y1="35.00" x2="74.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="76" y1="35.00" x2="75.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="77" y1="35.00" x2="76.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="78" y1="35.00" x2="77.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="79" y1="35.00" x2="78.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="80" y1="35.00" x2="79.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="81" y1="35.00" x2="80.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="82" y1="35.00" x2="81.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="83" y1="35.00" x2="82.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="84" y1="35.00" x2="83.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="85" y1="35.00" x2="84.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="86" y1="35.00" x2="85.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="87" y1="35.00" x2="86.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="88" y1="35.00" x2="87.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="89" y1="35.00" x2="88.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="90" y1="35.00" x2="89.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="91" y1="35.00" x2="90.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="92" y1="35.00" x2="91.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="93" y1="35.00" x2="92.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="94" y1="35.00" x2="93.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="95" y1="35.00" x2="94.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="96" y1="35.00" x2="95.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="97" y1="35.00" x2="96.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<line x1="98" y1="35.00" x2="97.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
+<text x="98.5" y="37.5" font-family="sans-serif" font-size="1.0" fill="#444" text-anchor="end">bed (Z=0)</text>
+<rect x="55.60" y="25.00" width="2.5" height="10.0" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
+<rect x="41.90" y="25.00" width="2.5" height="10.0" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
+<polygon points="55.10,24.80 55.60,24.80 55.60,35.00 50.00,29.90" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
+<polygon points="44.90,24.80 44.40,24.80 44.40,35.00 50.00,29.90" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
+<circle cx="50.00" cy="24.80" r="5.10" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.25"/>
+<circle cx="50.00" cy="24.80" r="2.55" fill="white" stroke="#3a2a00" stroke-width="0.18"/>
+<circle cx="50.00" cy="24.80" r="2.25" fill="#444" stroke="none"/>
+<line x1="37.90" y1="35.00" x2="37.90" y2="25.00" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="37.40" y1="35.00" x2="38.40" y2="35.00" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="37.40" y1="25.00" x2="38.40" y2="25.00" stroke="#1a4a8a" stroke-width="0.18"/>
+<text x="36.40" y="30.00" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="end" alignment-baseline="middle">case_h = 10</text>
+<line x1="37.90" y1="25.00" x2="37.90" y2="24.80" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="37.40" y1="25.00" x2="38.40" y2="25.00" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="37.40" y1="24.80" x2="38.40" y2="24.80" stroke="#1a4a8a" stroke-width="0.18"/>
+<text x="25.40" y="24.90" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="end" alignment-baseline="middle">PIVOT_Z_OFFSET</text>
+<text x="37.90" y="23.20" font-family="sans-serif" font-size="1.0" fill="#1a4a8a" text-anchor="middle">(case-design)</text>
+<line x1="60.10" y1="29.90" x2="60.10" y2="19.70" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="59.60" y1="29.90" x2="60.60" y2="29.90" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="59.60" y1="19.70" x2="60.60" y2="19.70" stroke="#7a3a00" stroke-width="0.18"/>
+<text x="63.60" y="24.80" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="end" alignment-baseline="middle">Po = 10.2</text>
+<text x="63.60" y="25.00" font-family="sans-serif" font-size="1.0" fill="#7a3a00">(= 2·Ro)</text>
+<line x1="51.00" y1="29.90" x2="51.00" y2="24.80" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="50.50" y1="29.90" x2="51.50" y2="29.90" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="50.50" y1="24.80" x2="51.50" y2="24.80" stroke="#7a3a00" stroke-width="0.18"/>
+<text x="48.00" y="27.35" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="end" alignment-baseline="middle">T = Ro</text>
+<line x1="50.00" y1="22.30" x2="55.60" y2="22.30" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="50.00" y1="21.80" x2="50.00" y2="22.80" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="55.60" y1="21.80" x2="55.60" y2="22.80" stroke="#7a3a00" stroke-width="0.18"/>
+<text x="52.80" y="21.00" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="middle">W = 5.6</text>
+<line x1="55.10" y1="20.30" x2="55.60" y2="20.30" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="55.10" y1="19.80" x2="55.10" y2="20.80" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="55.60" y1="19.80" x2="55.60" y2="20.80" stroke="#1a4a8a" stroke-width="0.18"/>
+<text x="55.35" y="19.30" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="middle">mounting_flat = 0.5</text>
+<line x1="50.00" y1="20.30" x2="55.10" y2="20.30" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="50.00" y1="19.80" x2="50.00" y2="20.80" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="55.10" y1="19.80" x2="55.10" y2="20.80" stroke="#7a3a00" stroke-width="0.18"/>
+<text x="52.55" y="19.30" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="middle">Ro = 5.1</text>
+<circle cx="68.0" cy="17" r="6" fill="white" stroke="#888" stroke-width="0.2"/>
+<circle cx="68.0" cy="17" r="7.65" fill="rgba(220,170,70,0.3)" stroke="#3a2a00" stroke-width="0.2"/>
+<circle cx="68.0" cy="17" r="6.75" fill="#444" stroke="none"/>
+<text x="68.0" y="10.5" font-family="sans-serif" font-size="1.0" fill="#666" text-anchor="middle">pin / bore (3×)</text>
+<line x1="60.35" y1="21.50" x2="75.65" y2="21.50" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="60.35" y1="21.00" x2="60.35" y2="22.00" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="75.65" y1="21.00" x2="75.65" y2="22.00" stroke="#7a3a00" stroke-width="0.18"/>
+<text x="68.00" y="20.50" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="middle">Pi = 5.1</text>
+<line x1="61.25" y1="23.50" x2="74.75" y2="23.50" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="61.25" y1="23.00" x2="61.25" y2="24.00" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="74.75" y1="23.00" x2="74.75" y2="24.00" stroke="#7a3a00" stroke-width="0.18"/>
+<text x="68.00" y="22.50" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="middle">2·Rp = 4.5</text>
+<line x1="74.75" y1="14.00" x2="75.65" y2="14.00" stroke="#1a4a8a" stroke-width="0.2"/>
+<text x="75.25" y="13.00" font-family="sans-serif" font-size="1.0" fill="#1a4a8a">pivot_clearance/2 = 0.3</text>
+<line x1="52.25" y1="24.80" x2="63.80" y2="12.80" stroke="#888" stroke-width="0.18" stroke-dasharray="0.5,0.5"/>
+</g>
+<g transform="translate(0, 42)">
+<rect x="0.1" y="0.1" width="99.8" height="29.8" fill="#fafafa" stroke="#ccc" stroke-width="0.1"/>
+<text x="1" y="2.5" font-family="sans-serif" font-size="1.2" font-weight="bold">Panel B — Top view (X-Y plane), one cs leaf</text>
+<text x="1" y="4.2" font-family="sans-serif" font-size="1.0" fill="#666">hinge_length=60, stations=6, clasp_width=10.0, clasp_clearance=0.4</text>
+<rect x="12.00" y="12.00" width="82.00" height="11.00" fill="rgba(70,140,220,0.20)" stroke="#1a4a8a" stroke-width="0.15"/>
+<rect x="19.11" y="17.00" width="13.12" height="7.00" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.2"/>
+<circle cx="25.67" cy="20.50" r="0.7" fill="white" stroke="#3a2a00" stroke-width="0.15"/>
+<rect x="46.44" y="17.00" width="13.12" height="7.00" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.2"/>
+<circle cx="53.00" cy="20.50" r="0.7" fill="white" stroke="#3a2a00" stroke-width="0.15"/>
+<rect x="73.77" y="17.00" width="13.12" height="7.00" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.2"/>
+<circle cx="80.33" cy="20.50" r="0.7" fill="white" stroke="#3a2a00" stroke-width="0.15"/>
+<rect x="32.50" y="17.00" width="13.67" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
+<rect x="59.83" y="17.00" width="13.67" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
+<rect x="12.00" y="17.00" width="6.83" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
+<rect x="87.17" y="17.00" width="6.83" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
+<line x1="12.00" y1="27.00" x2="94.00" y2="27.00" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="12.00" y1="26.50" x2="12.00" y2="27.50" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="94.00" y1="26.50" x2="94.00" y2="27.50" stroke="#1a4a8a" stroke-width="0.18"/>
+<text x="53.00" y="25.70" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="middle">hinge_length = 60</text>
+<line x1="46.17" y1="15.20" x2="59.83" y2="15.20" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="46.17" y1="14.70" x2="46.17" y2="15.70" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="59.83" y1="14.70" x2="59.83" y2="15.70" stroke="#7a3a00" stroke-width="0.18"/>
+<text x="53.00" y="13.90" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="middle">clasp_width = hinge_length/stations = 10.0</text>
+<text x="59.83" y="25.00" font-family="sans-serif" font-size="1.0" fill="#1a4a8a" text-anchor="middle">clasp_clearance = 0.4</text>
+<line x1="59.56" y1="17.30" x2="59.56" y2="23.70" stroke="#1a4a8a" stroke-width="0.15"/>
+<line x1="60.11" y1="17.30" x2="60.11" y2="23.70" stroke="#1a4a8a" stroke-width="0.15"/>
+<rect x="12.00" y="27.30" width="2.2" height="1.2" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.12"/>
+<text x="15.00" y="28.30" font-family="sans-serif" font-size="1.0">cs tab (with bore)</text>
+<rect x="37.00" y="27.30" width="2.2" height="1.2" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.3,0.3"/>
+<text x="40.00" y="28.30" font-family="sans-serif" font-size="1.0">ps tab (interleaves, not shown solid)</text>
+</g>
+</svg>

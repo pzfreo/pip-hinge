@@ -29,6 +29,16 @@ corner magnet pockets to latch the case shut. Both halves print as one
 piece in the orientation shown. The example also emits a bare HALF/FULL
 variant (no magnets) for reference.
 
+## Parameter reference
+
+![parameters guide](docs/diagrams/parameters_guide.png)
+
+Cross-section (Panel A) shows the spatial parameters: `case_h` (wall
+height), `PIVOT_Z_OFFSET` (extra lift), `mounting_flat` (flat past the
+disc edge), plus the derived `Po`/`Ro`/`T`/`W` and the pin/bore inset.
+Top view (Panel B) shows `hinge_length`, `stations`, derived
+`clasp_width`, and `clasp_clearance` between meshing tabs.
+
 ## The two knuckle options
 
 ![knuckle options](docs/diagrams/knuckle_options.png)
@@ -86,7 +96,7 @@ Three small tuneables:
 
 | Parameter         | Default | Meaning                                            |
 | ----------------- | ------- | -------------------------------------------------- |
-| `mounting_flat`   | 1.0     | Flat width past the disc edge for case-wall fusion |
+| `mounting_flat`   | 0.5     | Flat width past the disc edge for case-wall fusion. Below `pivot_clearance` (= 0.6 mm) the bare hinge fragments into multiple solids — fine when fused into a case, see docs |
 | `pivot_clearance` | 0.6     | Radial pin/bore gap (FDM tolerance)                |
 | `clasp_clearance` | 0.4     | Axial gap between cs and ps tabs                   |
 
