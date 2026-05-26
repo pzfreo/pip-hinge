@@ -66,9 +66,16 @@ STATIONS = 6
 # HingeParams has pivot_z_offset = 0.2 mm by default — see module docstring.
 
 # ── magnet pocket geometry (6 mm × 3 mm neodymium discs) ──────────────────
-MAGNET_R = 3.0
-MAGNET_D = 3.0
-BOSS_R = MAGNET_R + 1.5            # 1.5 mm of wall around the magnet
+# Pocket slightly larger than the magnet: 0.1 mm radial clearance (0.2 mm
+# on diameter) is enough on a typical 0.4 mm-nozzle FDM to give a snug
+# press fit without rattle. Depth gets a 0.1 mm margin too so the magnet
+# sits flush. The previous zero-clearance version was too tight to fit.
+MAGNET_OD = 6.0                    # actual magnet outer diameter
+MAGNET_T = 3.0                     # actual magnet thickness
+POCKET_RADIAL_CLEARANCE = 0.1      # radial, FDM-tested
+POCKET_R = MAGNET_OD / 2 + POCKET_RADIAL_CLEARANCE
+POCKET_DEPTH = MAGNET_T + 0.1      # tiny depth margin to sit flush
+BOSS_R = POCKET_R + 1.5            # 1.5 mm of wall around the pocket
 
 
 def hollow_half(x_sign: int, leaf_outer_x: float):
@@ -84,11 +91,15 @@ def hollow_half(x_sign: int, leaf_outer_x: float):
 
 
 def add_corner_magnet_pockets(half, x_sign: int, leaf_outer_x: float):
-    """Add 6 × 3 mm magnet pockets at the two front corners.
+    """Add pockets sized for 6 × 3 mm magnets at the two front corners.
 
-    Each boss is positioned along the diagonal from the interior corner so
-    it is tangent to the corner — after fusion with the case walls the boss
-    radius shows up as a quarter-circle fillet on the inside of the case.
+    Pocket is 6.2 mm Ø × 3.1 mm — a 0.1 mm radial clearance (0.2 mm on
+    diameter) and a 0.1 mm depth margin are enough on a typical 0.4 mm-
+    nozzle FDM. The previous "0 clearance" version printed too tight for
+    the magnets to fit at all. Each boss is positioned along the diagonal from the
+    interior corner so it is tangent to the corner — after fusion with
+    the case walls the boss radius shows up as a quarter-circle fillet
+    on the inside of the case.
     """
     x_corner = x_sign * (leaf_outer_x + CASE_D - WALL_T)
     for y_sign in (-1, +1):
@@ -100,9 +111,9 @@ def add_corner_magnet_pockets(half, x_sign: int, leaf_outer_x: float):
             align=(Align.CENTER, Align.CENTER, Align.MIN),
         ).translate((x_boss, y_boss, 0))
         pocket = Cylinder(
-            radius=MAGNET_R, height=MAGNET_D + 0.05,
+            radius=POCKET_R, height=POCKET_DEPTH,
             align=(Align.CENTER, Align.CENTER, Align.MIN),
-        ).translate((x_boss, y_boss, WALL_H - MAGNET_D))
+        ).translate((x_boss, y_boss, WALL_H - POCKET_DEPTH))
         half = (half + boss) - pocket
     return half
 
