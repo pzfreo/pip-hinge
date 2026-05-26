@@ -29,6 +29,7 @@ import warnings
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import Optional
 
 from build123d import (
     Axis,
@@ -73,7 +74,15 @@ class HingeParams:
     knuckle: Knuckle = Knuckle.FULL      # knuckle size
     mounting_flat: float = 0.5           # flat width past the disc edge (mm)
     pivot_clearance: float = 0.6         # radial pin/bore gap (mm)
-    clasp_clearance: float = 0.4         # axial gap between cs and ps tabs (mm)
+    clasp_clearance: Optional[float] = None
+    """Axial gap between cs and ps tabs (mm).
+
+    Leave as ``None`` to use the size-aware default: 0.2 mm for
+    ``Knuckle.SMALL`` (matches the original r0berts FreeCAD value — the
+    tighter fit matters more when the rest of the hinge is small) and
+    0.4 mm for ``HALF`` and ``FULL`` (the relaxed value that prints
+    reliably on a standard 0.4 mm-nozzle FDM).
+    """
 
     # Pin-engagement constants hand-tuned in the original FreeCAD source.
     # Leave at defaults unless deliberately tweaking pin feel.
@@ -116,6 +125,13 @@ class HingeParams:
                 stacklevel=2,
             )
 
+        # Size-aware clasp_clearance default: tighter (0.2) for SMALL,
+        # relaxed (0.4) for HALF/FULL. User can still override.
+        if self.clasp_clearance is None:
+            Cc = 0.2 if self.knuckle is Knuckle.SMALL else 0.4
+        else:
+            Cc = self.clasp_clearance
+
         return {
             "case_h": self.case_h,
             "H": self.hinge_length,
@@ -127,7 +143,7 @@ class HingeParams:
             "Pc": self.pivot_clearance,
             "W": Ro + self.mounting_flat,
             "Cw": Cw,
-            "Cc": self.clasp_clearance,
+            "Cc": Cc,
             "pin_cyl_extra": self.pin_cyl_extra,
             "pin_end_offset": self.pin_end_offset,
             "pin_short": self.pin_short_cyl_factor,
