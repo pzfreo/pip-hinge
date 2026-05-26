@@ -118,14 +118,23 @@ class HingeParams:
             )
         if self.mounting_flat < 0:
             raise ValueError(f"mounting_flat must be ≥ 0 (got {self.mounting_flat})")
+        if self.pivot_z_offset < 0:
+            raise ValueError(f"pivot_z_offset must be ≥ 0 (got {self.pivot_z_offset})")
 
+        # Knuckle is sized to the LIFTED axis (case_h + pivot_z_offset), not just
+        # case_h. This preserves the "FULL knuckle bottom rests on bed when flat
+        # for printing" guarantee: with Ro = case_h + pz_off, the axis at Z =
+        # case_h + pz_off and Ro the same means the disc bottom lands at exactly
+        # Z = 0 (the bed). It also keeps the bottom segment of the leaf polyline
+        # horizontal at FULL (no spurious slope from the offset).
+        effective_case_h = self.case_h + self.pivot_z_offset
         if self.knuckle is Knuckle.SMALL:
             # 1/4 of FULL, floored at 5 mm so the pin & bore stay printable
             # at any case height. For case_h ≥ 10 mm the ratio dominates;
             # below that the 5 mm floor kicks in.
-            Po = max(self.case_h / 2, 5.0)
+            Po = max(effective_case_h / 2, 5.0)
         else:
-            Po = 2 * self.case_h * self.knuckle.value / 100
+            Po = 2 * effective_case_h * self.knuckle.value / 100
         Ro = Po / 2
         Pi = Po / 2                                  # bore diameter (= Ro)
         if Pi <= self.pivot_clearance:
@@ -151,9 +160,6 @@ class HingeParams:
             Cc = max(0.2, min(0.4, 0.04 * Po))
         else:
             Cc = self.clasp_clearance
-
-        if self.pivot_z_offset < 0:
-            raise ValueError(f"pivot_z_offset must be ≥ 0 (got {self.pivot_z_offset})")
         return {
             "case_h": self.case_h,
             "H": self.hinge_length,
@@ -292,9 +298,11 @@ def make_hinge(params: HingeParams = None) -> Compound:
     p = params._resolve()
     case_h, H, N = p["case_h"], p["H"], p["stations"]
     pz_off = p["pivot_z_offset"]
-    # Effective leaf height — grows by pivot_z_offset so the bed-side
-    # end of the leaf still reaches the bed when the lifted axis is
-    # positioned at case_h.
+    # The hinge is built in coords where the disc centre is at Z=0; after
+    # construction we translate everything up by pz_off so the disc centre
+    # ends up at the lifted axis height when the caller positions the hinge
+    # to the wall top. The leaf must therefore extend down to Z = -leaf_h
+    # = -(case_h + pz_off), so its bed-side end lands at world Z = 0.
     leaf_h = case_h + pz_off
     Ro, T, Po = p["Ro"], p["T"], p["Po"]
     Pi, Pc, W = p["Pi"], p["Pc"], p["W"]
@@ -306,10 +314,11 @@ def make_hinge(params: HingeParams = None) -> Compound:
     pocket_extrude = leaf_h + Pc / 2
 
     # ── cs (cylinder-side) leaf ──────────────────────────────────────────────
-    # Unified polyline: at FULL (T = case_h, pz_off=0) the "ramp" segment
-    # from (W, -leaf_h) to (0, -T) lies flat on the bed; at HALF it slopes
-    # up at 45° (or shallower if mounting_flat > 0). pivot_z_offset adds
-    # to leaf_h so the bottom still reaches the bed.
+    # Unified polyline. At FULL the knuckle is sized to the lifted axis
+    # (Ro = leaf_h), so T = leaf_h and the "ramp" segment from (W, -leaf_h)
+    # to (0, -T) is horizontal — knuckle bottom touches the bed, no overhang.
+    # At HALF/SMALL the disc bottom sits above the bed and the segment is a
+    # 45°-or-shallower self-supporting ramp.
     cs_profile = (
         Polyline((Ro, 0), (W, 0), (W, -leaf_h), (0, -T))
         + CenterArc(center=(0, 0), radius=Ro, start_angle=270, arc_size=-270)

@@ -107,13 +107,6 @@ def add_corner_magnet_pockets(half, x_sign: int, leaf_outer_x: float):
     return half
 
 
-def _resolved_po(knuckle: Knuckle) -> float:
-    """Po that ``hinge.py`` will compute internally for this knuckle option."""
-    if knuckle is Knuckle.SMALL:
-        return max(WALL_H / 2, 5.0)
-    return 2 * WALL_H * knuckle.value / 100
-
-
 def _split_hinge_by_side(hinge):
     """Sort the hinge's solids into cs-side (+X bias) and ps-side (-X bias).
 
@@ -150,7 +143,10 @@ def build_clamshell(knuckle: Knuckle, magnets: bool = False):
         knuckle=knuckle,
         # pivot_z_offset defaults to 0.2 mm — see module docstring
     )
-    leaf_outer = _resolved_po(knuckle) / 2 + params.mounting_flat
+    # W is the leaf's outer face (X = Ro + mounting_flat), which is exactly
+    # where the case back wall sits. Pull it from the resolved params so we
+    # don't duplicate the knuckle-sizing formula here.
+    leaf_outer = params._resolve()["W"]
 
     cs, ps = _split_hinge_by_side(make_hinge(params))
     cs = cs.translate((0, 0, WALL_H))           # hinge positions to wall top;
