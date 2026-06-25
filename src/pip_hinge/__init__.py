@@ -25,6 +25,7 @@ Print orientation: lay flat on the bed, hinge axis along Y (parallel to bed).
 
 from __future__ import annotations
 
+import math
 import warnings
 from dataclasses import dataclass
 from enum import Enum
@@ -311,14 +312,38 @@ def make_hinge(params: HingeParams = None) -> Compound:
     pocket_extrude = leaf_h + Pc / 2
 
     # ── cs (cylinder-side) leaf ──────────────────────────────────────────────
-    # Unified polyline. At FULL the knuckle is sized to the lifted axis
-    # (Ro = leaf_h), so T = leaf_h and the "ramp" segment from (W, -leaf_h)
-    # to (0, -T) is horizontal — knuckle bottom touches the bed, no overhang.
-    # At HALF/SMALL the disc bottom sits above the bed and the segment is a
-    # 45°-or-shallower self-supporting ramp.
+    # The support ramp must run from the wall foot (±W, -leaf_h) up TANGENT to the
+    # knuckle circle -- not radially to its bottom (0, -T). A radial ramp leaves
+    # the circle's underside on the MESHING side (the side with no wall) hanging
+    # past the contact, so it sags when printed without support. The tangent
+    # touches the circle on the far side; we run the ramp there and start the disc
+    # arc from that tangent point, so the underside is cradled the whole way and
+    # the exposed arc above it is always steeper than the ramp (self-supporting).
+    # At FULL the disc bottom rests on the bed, so the old horizontal ramp stays.
+    use_tangent = T < leaf_h - 1e-6
+
+    def _far_tangent(wall_x):
+        """Angle (rad) of the tangent point on the side OPPOSITE the wall."""
+        ex, ey = wall_x, -leaf_h
+        d = math.hypot(ex, ey)
+        a = math.asin(min(1.0, Ro / d))
+        base = math.atan2(ey, ex)
+        for s in (1.0, -1.0):
+            th = base + s * (math.pi / 2 - a)
+            if (math.cos(th) < 0) == (wall_x > 0):     # far side = opposite the wall
+                return th
+        return None
+
+    if use_tangent and _far_tangent(W) is not None:
+        th = _far_tangent(W)
+        cs_tp = (Ro * math.cos(th), Ro * math.sin(th))
+        cs_start = math.degrees(th) % 360.0
+        cs_arc = -cs_start                             # CW over the exposed side to (Ro, 0)
+    else:
+        cs_tp, cs_start, cs_arc = (0, -T), 270.0, -270.0
     cs_profile = (
-        Polyline((Ro, 0), (W, 0), (W, -leaf_h), (0, -T))
-        + CenterArc(center=(0, 0), radius=Ro, start_angle=270, arc_size=-270)
+        Polyline((Ro, 0), (W, 0), (W, -leaf_h), cs_tp)
+        + CenterArc(center=(0, 0), radius=Ro, start_angle=cs_start, arc_size=cs_arc)
     )
     cs_sketch = Sketch() + Plane.XZ * (make_face(cs_profile) - Circle(Ri))
     cs_pad = extrude(cs_sketch, amount=H / 2, both=True)
@@ -330,9 +355,16 @@ def make_hinge(params: HingeParams = None) -> Compound:
     cylinder_side = cs_pad - extrude(cs_pocket, amount=pocket_extrude, both=True)
 
     # ── ps (pin-side) leaf ───────────────────────────────────────────────────
+    if use_tangent and _far_tangent(-W) is not None:
+        th = _far_tangent(-W)
+        ps_tp = (Ro * math.cos(th), Ro * math.sin(th))
+        ps_start = math.degrees(th) % 360.0
+        ps_arc = 540.0 - ps_start                      # CCW over the exposed side to (-Ro, 0)
+    else:
+        ps_tp, ps_start, ps_arc = (0, -T), 270.0, 270.0
     ps_profile = (
-        Polyline((-Ro, 0), (-W, 0), (-W, -leaf_h), (0, -T))
-        + CenterArc(center=(0, 0), radius=Ro, start_angle=270, arc_size=270)
+        Polyline((-Ro, 0), (-W, 0), (-W, -leaf_h), ps_tp)
+        + CenterArc(center=(0, 0), radius=Ro, start_angle=ps_start, arc_size=ps_arc)
     )
     ps_sketch = Sketch() + Plane.XZ * make_face(ps_profile)
     ps_pad = extrude(ps_sketch, amount=H / 2, both=True)
