@@ -25,6 +25,7 @@ Print orientation: lay flat on the bed, hinge axis along Y (parallel to bed).
 
 from __future__ import annotations
 
+import math
 import warnings
 from dataclasses import dataclass
 from enum import Enum
@@ -113,8 +114,10 @@ class HingeParams:
             raise ValueError(
                 f"stations must be an even integer ≥ 2 (got {self.stations})"
             )
-        if self.mounting_flat < 0:
-            raise ValueError(f"mounting_flat must be ≥ 0 (got {self.mounting_flat})")
+        if self.mounting_flat <= 0:
+            # W == Ro at 0 gives a degenerate leaf profile that OCC rejects with a
+            # cryptic StdFail_NotDone; fail early with a clear message instead.
+            raise ValueError(f"mounting_flat must be > 0 (got {self.mounting_flat})")
         if self.pivot_z_offset < 0:
             raise ValueError(f"pivot_z_offset must be ≥ 0 (got {self.pivot_z_offset})")
 
@@ -310,16 +313,70 @@ def make_hinge(params: HingeParams = None) -> Compound:
     Xi = Ro + Pc                             # inner X boundary of pocket comb
     pocket_extrude = leaf_h + Pc / 2
 
-    # ── cs (cylinder-side) leaf ──────────────────────────────────────────────
-    # Unified polyline. At FULL the knuckle is sized to the lifted axis
-    # (Ro = leaf_h), so T = leaf_h and the "ramp" segment from (W, -leaf_h)
-    # to (0, -T) is horizontal — knuckle bottom touches the bed, no overhang.
-    # At HALF/SMALL the disc bottom sits above the bed and the segment is a
-    # 45°-or-shallower self-supporting ramp.
-    cs_profile = (
-        Polyline((Ro, 0), (W, 0), (W, -leaf_h), (0, -T))
-        + CenterArc(center=(0, 0), radius=Ro, start_angle=270, arc_size=-270)
-    )
+    # ── leaf profiles ────────────────────────────────────────────────────────
+    # Each leaf's underside must reach the bed self-supporting (no slicer support).
+    # The knuckle disc sits at the wall top; on the MESHING side (the side with no
+    # wall under it) its lower arc faces down and would sag. Two cases:
+    #
+    #  • small disc -> a tangent RAMP from the wall foot (±W, -leaf_h) up to the far
+    #    tangent point cradles the underside; the exposed arc above is steeper still.
+    #    The tangent is the steepest ramp that reaches the disc, so for a small disc
+    #    it is >= 45° from horizontal and self-supports.
+    #
+    #  • big disc (e.g. Knuckle.HALF) -> that foot-anchored tangent comes out < 45°
+    #    and would sag. Instead the support line meets the disc TANGENTIALLY on the
+    #    meshing side at exactly SELF_SUPPORT_DEG and runs down to its own bed
+    #    contact, replacing the disc's downward arc with a self-supporting TEARDROP.
+    #
+    #  • FULL -> the disc rests on the bed (no ramp, no teardrop).
+    SELF_SUPPORT_DEG = 45.0
+    use_tangent = T < leaf_h - 1e-6
+
+    def _far_tangent(wall_x):
+        """Angle (rad) of the tangent point on the side OPPOSITE the wall."""
+        ex, ey = wall_x, -leaf_h
+        d = math.hypot(ex, ey)
+        a = math.asin(min(1.0, Ro / d))
+        base = math.atan2(ey, ex)
+        for s in (1.0, -1.0):
+            th = base + s * (math.pi / 2 - a)
+            if (math.cos(th) < 0) == (wall_x > 0):     # far side = opposite the wall
+                return th
+        return None
+
+    def _knuckle_geo(wall_x):
+        """('ramp'|'teardrop', tangent_angle_rad) for the meshing-side underside."""
+        th = _far_tangent(wall_x)
+        if th is not None:
+            tp = (Ro * math.cos(th), Ro * math.sin(th))
+            ang = math.degrees(math.atan2(abs(tp[1] + leaf_h), abs(tp[0] - wall_x)))
+            if ang >= SELF_SUPPORT_DEG:
+                return "ramp", th
+        # teardrop: meshing-side tangent at exactly the self-support angle
+        th_td = math.radians(180.0 + SELF_SUPPORT_DEG) if wall_x > 0 \
+            else math.radians(360.0 - SELF_SUPPORT_DEG)
+        return "teardrop", th_td
+
+    def _leaf_profile(wall_x):
+        """Outer profile: wall + self-supporting underside + exposed disc arc."""
+        sgn = 1.0 if wall_x > 0 else -1.0
+        eq = (sgn * Ro, 0.0)                           # disc equator on the wall side
+        bed = []
+        if not use_tangent:                            # FULL: disc rests on the bed
+            tp, start = (0.0, -T), 270.0
+        else:
+            mode, th = _knuckle_geo(wall_x)
+            tp = (Ro * math.cos(th), Ro * math.sin(th))
+            start = math.degrees(th) % 360.0
+            if mode == "teardrop":                     # tangent line down to its own
+                run = (leaf_h + tp[1]) / math.tan(math.radians(SELF_SUPPORT_DEG))
+                bed = [(tp[0] + sgn * run, -leaf_h)]   # bed contact, then up to tp
+        # arc sweeps from the tangent point over the EXPOSED side back to the equator
+        arc = -start if wall_x > 0 else 540.0 - start
+        return (Polyline(eq, (wall_x, 0.0), (wall_x, -leaf_h), *bed, tp)
+                + CenterArc(center=(0, 0), radius=Ro, start_angle=start, arc_size=arc))
+
+    cs_profile = _leaf_profile(W)
     cs_sketch = Sketch() + Plane.XZ * (make_face(cs_profile) - Circle(Ri))
     cs_pad = extrude(cs_sketch, amount=H / 2, both=True)
     # Pocket polygon left edge must stay left of the notch jogs (which go to -Xi),
@@ -330,10 +387,7 @@ def make_hinge(params: HingeParams = None) -> Compound:
     cylinder_side = cs_pad - extrude(cs_pocket, amount=pocket_extrude, both=True)
 
     # ── ps (pin-side) leaf ───────────────────────────────────────────────────
-    ps_profile = (
-        Polyline((-Ro, 0), (-W, 0), (-W, -leaf_h), (0, -T))
-        + CenterArc(center=(0, 0), radius=Ro, start_angle=270, arc_size=270)
-    )
+    ps_profile = _leaf_profile(-W)
     ps_sketch = Sketch() + Plane.XZ * make_face(ps_profile)
     ps_pad = extrude(ps_sketch, amount=H / 2, both=True)
     Xo_ps = 4 * Po - Xi
