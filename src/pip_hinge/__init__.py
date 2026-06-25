@@ -318,8 +318,14 @@ def make_hinge(params: HingeParams = None) -> Compound:
     # past the contact, so it sags when printed without support. The tangent
     # touches the circle on the far side; we run the ramp there and start the disc
     # arc from that tangent point, so the underside is cradled the whole way and
-    # the exposed arc above it is always steeper than the ramp (self-supporting).
-    # At FULL the disc bottom rests on the bed, so the old horizontal ramp stays.
+    # the exposed arc above it is always steeper than the ramp.
+    #
+    # The tangent is the STEEPEST ramp that can reach the disc, so its angle is
+    # fixed by Ro vs leaf_h. For a small disc it is steep (self-supporting); for a
+    # big disc (e.g. Knuckle.HALF) it comes out shallower than 45° and would sag.
+    # We never emit a sagging hinge: build a self-supporting tangent ramp (>= 45°
+    # from horizontal) or raise. At FULL the disc rests on the bed (no ramp).
+    SELF_SUPPORT_DEG = 45.0
     use_tangent = T < leaf_h - 1e-6
 
     def _far_tangent(wall_x):
@@ -334,9 +340,25 @@ def make_hinge(params: HingeParams = None) -> Compound:
                 return th
         return None
 
-    if use_tangent and _far_tangent(W) is not None:
-        th = _far_tangent(W)
-        cs_tp = (Ro * math.cos(th), Ro * math.sin(th))
+    def _ramp_tangent(wall_x):
+        """Tangent point for the support ramp; raise if it can't self-support."""
+        th = _far_tangent(wall_x)
+        ang = None
+        if th is not None:
+            tp = (Ro * math.cos(th), Ro * math.sin(th))
+            ang = math.degrees(math.atan2(abs(tp[1] + leaf_h), abs(tp[0] - wall_x)))
+        if th is None or ang < SELF_SUPPORT_DEG:
+            raise ValueError(
+                f"no self-supporting knuckle ramp for case_h={case_h:g}, "
+                f"knuckle={params.knuckle.name}: the support ramp would be "
+                f"{ang:.0f}° from horizontal (need ≥ {SELF_SUPPORT_DEG:.0f}). "
+                f"Use Knuckle.SMALL or Knuckle.FULL." if ang is not None else
+                f"no tangent ramp exists for case_h={case_h:g}, "
+                f"knuckle={params.knuckle.name}.")
+        return th, tp
+
+    if use_tangent:
+        th, cs_tp = _ramp_tangent(W)
         cs_start = math.degrees(th) % 360.0
         cs_arc = -cs_start                             # CW over the exposed side to (Ro, 0)
     else:
@@ -355,9 +377,8 @@ def make_hinge(params: HingeParams = None) -> Compound:
     cylinder_side = cs_pad - extrude(cs_pocket, amount=pocket_extrude, both=True)
 
     # ── ps (pin-side) leaf ───────────────────────────────────────────────────
-    if use_tangent and _far_tangent(-W) is not None:
-        th = _far_tangent(-W)
-        ps_tp = (Ro * math.cos(th), Ro * math.sin(th))
+    if use_tangent:
+        th, ps_tp = _ramp_tangent(-W)
         ps_start = math.degrees(th) % 360.0
         ps_arc = 540.0 - ps_start                      # CCW over the exposed side to (-Ro, 0)
     else:
