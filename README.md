@@ -128,7 +128,7 @@ defaults unless deliberately tuning the pin/bore feel.
 ## Validation
 
 `make_hinge()` raises `ValueError` for hard geometric problems:
-- non-positive `case_h`, `hinge_length`, or negative `mounting_flat`
+- non-positive `case_h`, `hinge_length`, or `mounting_flat`
 - `stations < 2` or odd
 - bore Ø ≤ `pivot_clearance` (knuckle too small for the pivot clearance)
 

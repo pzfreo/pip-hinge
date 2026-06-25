@@ -114,8 +114,10 @@ class HingeParams:
             raise ValueError(
                 f"stations must be an even integer ≥ 2 (got {self.stations})"
             )
-        if self.mounting_flat < 0:
-            raise ValueError(f"mounting_flat must be ≥ 0 (got {self.mounting_flat})")
+        if self.mounting_flat <= 0:
+            # W == Ro at 0 gives a degenerate leaf profile that OCC rejects with a
+            # cryptic StdFail_NotDone; fail early with a clear message instead.
+            raise ValueError(f"mounting_flat must be > 0 (got {self.mounting_flat})")
         if self.pivot_z_offset < 0:
             raise ValueError(f"pivot_z_offset must be ≥ 0 (got {self.pivot_z_offset})")
 

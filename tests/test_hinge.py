@@ -117,8 +117,11 @@ def test_builds_valid(hinges, knuckle, case_h):
     h = hinges[(knuckle, case_h)]
     assert h.is_valid
     assert h.volume > 0
-    solids = h.solids()
-    assert len(solids) >= 2, "expected at least two leaf bodies"
+    # All CASES use mounting_flat=1.0 > pivot_clearance, so each leaf must be a
+    # single connected body: exactly two solids (cs leaf, ps leaf + captured pin).
+    # `>= 2` would pass the fragmented pile a too-small mounting_flat produces;
+    # `== 2` is what makes this catch a leaf that silently breaks apart.
+    assert len(h.solids()) == 2, f"expected 2 connected leaves, got {len(h.solids())}"
     cs, ps = _leaf_solids(h)
     assert cs.volume > 0 and ps.volume > 0
 
@@ -204,3 +207,27 @@ def test_half_underside_meets_disc_at_tangent():
     bed = (tp[0] + run, -leaf_h)
     drop_angle = math.degrees(math.atan2(abs(bed[1] - tp[1]), abs(bed[0] - tp[0])))
     assert abs(drop_angle - SELF_SUPPORT_DEG) < 1e-6
+
+
+def test_zero_mounting_flat_rejected():
+    """mounting_flat=0 makes W==Ro, a degenerate profile OCC rejects with a
+    cryptic StdFail_NotDone; we must reject it up front with a clear message."""
+    with pytest.raises(ValueError, match="mounting_flat"):
+        make_hinge(HingeParams(case_h=20, hinge_length=96, stations=8,
+                               knuckle=Knuckle.HALF, mounting_flat=0.0))
+
+
+def test_bare_hinge_fragments_below_pivot_clearance():
+    """Documented design point (see examples/clamshell.py:_split_hinge_by_side):
+    a BARE hinge with mounting_flat <= pivot_clearance fragments into many solids.
+    That is intentional -- it is meant to be fused into a case, where the walls
+    bridge the tabs -- so it must NOT be 'fixed' with a guard. Lock the threshold
+    so it can't drift silently: at/below pivot_clearance it fragments, just above
+    it is a clean 2-body hinge."""
+    pc = 0.6
+    common = dict(case_h=20, hinge_length=96, stations=8, knuckle=Knuckle.HALF,
+                  pivot_clearance=pc)
+    fragmented = make_hinge(HingeParams(mounting_flat=pc, **common))
+    connected = make_hinge(HingeParams(mounting_flat=pc + 0.1, **common))
+    assert len(fragmented.solids()) > 2          # intentional: fuses into a case
+    assert len(connected.solids()) == 2          # bare hinge is whole above threshold
