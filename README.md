@@ -46,7 +46,7 @@ Top view (Panel B) shows `hinge_length`, `stations`, derived
 | `knuckle`      | knuckle diameter            | ramp                  | gap between case walls (flat-open) |
 | -------------- | --------------------------- | --------------------- | ---------------------------------- |
 | `Knuckle.FULL` | `2 × case_h`                | none — rests on bed   | `2 × (case_h + mounting_flat)`     |
-| `Knuckle.HALF` | `case_h`                    | 45° self-supporting   | `case_h + 2 × mounting_flat`       |
+| `Knuckle.HALF` | `case_h`                    | 45° self-supporting teardrop | `case_h + 2 × mounting_flat`       |
 | `Knuckle.SMALL`| `max(case_h / 2, 5 mm)`     | ~25° from vertical (smaller knuckle → naturally steeper) | `max(case_h, 10mm) + 2 × mounting_flat` |
 
 See [docs/clamshell-integration.md](docs/clamshell-integration.md) for
@@ -67,8 +67,8 @@ The original is a spreadsheet-driven FreeCAD model. This repository:
    relationships derived under the hood.
 3. Generalises the comb pattern (hardcoded 6 stations in the original) to
    any even number of stations ≥ 2, and adds an optional
-   `Knuckle.HALF` mode with a self-supporting ramp for cases where a
-   smaller knuckle is wanted.
+   `Knuckle.HALF` mode with a self-supporting teardrop knuckle for cases
+   where a smaller knuckle is wanted.
 
 Per the CC BY 4.0 terms: design and dimensional relationships are
 r0berts'; modifications are the build123d port, the four-input API, and
@@ -143,9 +143,9 @@ leaves to break the clearance gaps free.
 
 - **FULL** prints without any supports at any knuckle size — the knuckle
   rests on the bed.
-- **HALF** prints without supports as long as `mounting_flat` is small
-  enough that the ramp angle stays ≤ 45° (which the default 1 mm satisfies
-  for all sensible `case_h`).
+- **HALF** prints without supports at any `case_h`: the meshing-side underside
+  meets the knuckle tangentially at 45° and runs to the bed as a self-supporting
+  teardrop, so the disc's downward arc is never left hanging.
 
 ## How this was built
 
