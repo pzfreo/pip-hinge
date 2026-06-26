@@ -1,0 +1,38 @@
+name: Publish to PyPI
+
+# Build on every GitHub Release, and publish to PyPI via OIDC Trusted
+# Publishing (no API token stored anywhere). workflow_dispatch lets the very
+# first publish run be triggered by hand once the PyPI pending publisher is set.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build sdist + wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Build
+        run: uv build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # Must match the environment name registered on the PyPI trusted publisher.
+    environment: pypi
+    permissions:
+      id-token: write   # OIDC token for Trusted Publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
