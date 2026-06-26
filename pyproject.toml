@@ -1,6 +1,6 @@
 [project]
 name = "pip-hinge"
-version = "0.3.0"
+version = "0.1.0"
 description = "Parametric print-in-place piano hinge for clamshell cases, in build123d"
 readme = "README.md"
 license = { file = "LICENSE" }
