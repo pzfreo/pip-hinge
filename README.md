@@ -76,11 +76,14 @@ the configurable station count and ramp.
 
 ## Quick start
 
-Install from this repo into your own project (until it's on PyPI):
+Install the latest release from [PyPI](https://pypi.org/project/pip-hinge/):
 
 ```bash
-uv pip install git+https://github.com/pzfreo/pip-hinge.git
+uv add pip-hinge
 ```
+
+Use `uv pip install pip-hinge` instead when installing directly into an
+environment rather than adding it to a project.
 
 Then in your build123d code:
 
