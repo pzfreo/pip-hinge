@@ -417,4 +417,16 @@ def make_hinge(params: HingeParams = None) -> Compound:
     return Compound(occ)
 
 
-__all__ = ["HingeParams", "Knuckle", "make_hinge"]
+# Imported last: the clasp builds its pivot with make_hinge above.
+from pip_hinge.clasp import (  # noqa: E402
+    ClaspParams,
+    ClaspParts,
+    close_flap,
+    make_clasp,
+    pivot_axis,
+)
+
+__all__ = [
+    "HingeParams", "Knuckle", "make_hinge",
+    "ClaspParams", "ClaspParts", "make_clasp", "close_flap", "pivot_axis",
+]

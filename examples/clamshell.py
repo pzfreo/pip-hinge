@@ -12,8 +12,10 @@ Generates four variants:
                                             self-supporting ramp.
   examples/clamshell_magnets.{step,stl}  — Knuckle.HALF + 4 corner magnet pockets,
                                             a useful little case on its own
+  examples/clamshell_clasp.{step,stl}    — Knuckle.HALF + a print-in-place snap
+                                            clasp at the front (make_clasp)
 
-All three share two settings that came out of real printing & assembly:
+All variants share two settings that came out of real printing & assembly:
 
   pivot_z_offset = 0.2 mm  (default on HingeParams)
       Raises the hinge axis 0.2 mm above the wall top. The closed lid
@@ -37,6 +39,11 @@ All three share two settings that came out of real printing & assembly:
       Install lid magnets with the opposite polarity to the base magnets,
       or they'll repel when closed.
 
+  CLASP (clasp variant) on the front walls instead of magnets. The flap
+      and its knuckle print lying flat outside the lid's front wall; the
+      catch block stands on the bed against the base's front wall. The
+      clasp's seam_gap defaults to 0.4 mm, matching the 2·δ seam above.
+
 Both halves are coplanar on the bed (Z = 0), with the hinge axis along Y
 through (X = 0, Z = WALL_H + pivot_z_offset). Base extends in +X, lid
 in −X. Print as one piece — no supports needed.
@@ -47,9 +54,9 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-from build123d import Align, Box, Compound, Cylinder, export_step, export_stl
+from build123d import Align, Axis, Box, Compound, Cylinder, export_step, export_stl
 
-from pip_hinge import HingeParams, Knuckle, make_hinge
+from pip_hinge import ClaspParams, HingeParams, Knuckle, make_clasp, make_hinge
 
 
 # ── case dimensions ───────────────────────────────────────────────────────
@@ -73,6 +80,9 @@ POCKET_RADIAL_CLEARANCE = 0.1      # radial, FDM-tested
 POCKET_R = MAGNET_OD / 2 + POCKET_RADIAL_CLEARANCE
 POCKET_DEPTH = MAGNET_T + 0.1      # tiny depth margin to sit flush
 BOSS_R = POCKET_R + 1.5            # 1.5 mm of wall around the pocket
+
+# ── front clasp ───────────────────────────────────────────────────────────
+CLASP_WIDTH = 30.0
 
 
 def hollow_half(x_sign: int, leaf_outer_x: float):
@@ -134,7 +144,23 @@ def _split_hinge_by_side(hinge):
     return Compound(cs), Compound(ps)
 
 
-def build_clamshell(knuckle: Knuckle, magnets: bool = False):
+def clasp_parts(leaf_outer_x: float):
+    """Clasp bodies positioned on the front walls of the flat-open case.
+
+    make_clasp() returns the lid mount and flap in a frame whose X = 0 is
+    the front face with the outside in −X, which is already how the lid's
+    front face sits here. The catch comes in the same kind of frame for the
+    base, so it is turned 180° about Z to face +X.
+    """
+    front = leaf_outer_x + CASE_D
+    parts = make_clasp(ClaspParams(case_h=WALL_H, width=CLASP_WIDTH))
+    lid_mount = parts.lid_mount.translate((-front, 0, 0))
+    flap = parts.flap.translate((-front, 0, 0))
+    catch = parts.catch.rotate(Axis.Z, 180).translate((front, 0, 0))
+    return lid_mount, flap, catch
+
+
+def build_clamshell(knuckle: Knuckle, magnets: bool = False, clasp: bool = False):
     # All three variants use the default mounting_flat = 0.5 mm. The leaf
     # strip vanishes (mflat < pivot_clearance = 0.6) so the bare hinge
     # comes back fragmented, but each fragment fuses to the case wall
@@ -165,19 +191,23 @@ def build_clamshell(knuckle: Knuckle, magnets: bool = False):
     if magnets:
         base = add_corner_magnet_pockets(base, +1, leaf_outer)
         lid = add_corner_magnet_pockets(lid, -1, leaf_outer)
+    if clasp:
+        lid_mount, flap, catch = clasp_parts(leaf_outer)
+        return Compound([base + catch, lid + lid_mount, *flap.solids()])
     return Compound([base, lid])
 
 
 def main():
     out = Path(__file__).parent
     variants = [
-        ("clamshell_full", Knuckle.FULL, False),
-        ("clamshell_half", Knuckle.HALF, False),
-        ("clamshell_small", Knuckle.SMALL, False),
-        ("clamshell_magnets", Knuckle.HALF, True),
+        ("clamshell_full", Knuckle.FULL, {}),
+        ("clamshell_half", Knuckle.HALF, {}),
+        ("clamshell_small", Knuckle.SMALL, {}),
+        ("clamshell_magnets", Knuckle.HALF, {"magnets": True}),
+        ("clamshell_clasp", Knuckle.HALF, {"clasp": True}),
     ]
-    for name, knuckle, magnets in variants:
-        clamshell = build_clamshell(knuckle, magnets=magnets)
+    for name, knuckle, options in variants:
+        clamshell = build_clamshell(knuckle, **options)
         stem = out / name
         export_step(clamshell, str(stem) + ".step")
         export_stl(clamshell, str(stem) + ".stl")

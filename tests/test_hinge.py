@@ -24,8 +24,9 @@ from build123d import Compound
 from OCP.BRepAdaptor import BRepAdaptor_Surface
 from OCP.BRepLProp import BRepLProp_SLProps
 from OCP.BRepClass3d import BRepClass3d_SolidClassifier
-from OCP.TopAbs import TopAbs_REVERSED, TopAbs_IN
-from OCP.gp import gp_Pnt
+from OCP.BRepClass import BRepClass_FaceClassifier
+from OCP.TopAbs import TopAbs_REVERSED, TopAbs_IN, TopAbs_OUT
+from OCP.gp import gp_Pnt, gp_Pnt2d
 from OCP.BRepExtrema import BRepExtrema_DistShapeShape
 
 from pip_hinge import HingeParams, Knuckle, make_hinge
@@ -83,10 +84,15 @@ def _overhangs(solid, bed_z, axis_z=None, disc_r=None):
         reversed_ = face.wrapped.Orientation() == TopAbs_REVERSED
         u0, u1 = surf.FirstUParameter(), surf.LastUParameter()
         v0, v1 = surf.FirstVParameter(), surf.LastVParameter()
+        # The UV box covers the untrimmed surface; skip samples that fall in
+        # a notch or hole cut out of the face.
         for i in range(SAMPLES):
             for j in range(SAMPLES):
                 u = u0 + (u1 - u0) * (i + 0.5) / SAMPLES
                 v = v0 + (v1 - v0) * (j + 0.5) / SAMPLES
+                trim = BRepClass_FaceClassifier(face.wrapped, gp_Pnt2d(u, v), 1e-6)
+                if trim.State() == TopAbs_OUT:
+                    continue
                 props = BRepLProp_SLProps(surf, u, v, 1, 1e-6)
                 if not props.IsNormalDefined():
                     continue
