@@ -26,7 +26,7 @@ packages = ["src/pip_hinge"]
 
 [tool.hatch.build.targets.sdist]
 # Ship the source examples, not the multi-MB meshes they generate.
-exclude = ["examples/*.stl", "examples/*.step"]
+exclude = ["examples/*.stl", "examples/*.step", ".mcp.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
