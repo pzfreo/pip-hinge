@@ -28,7 +28,9 @@ from OCP.TopAbs import TopAbs_REVERSED, TopAbs_IN
 from OCP.gp import gp_Pnt
 from OCP.BRepExtrema import BRepExtrema_DistShapeShape
 
-from pip_hinge import HingeParams, Knuckle, make_hinge
+from build123d import Box, Pos
+
+from pip_hinge import HingeParams, Knuckle, PrintInPlaceHinge, make_hinge
 
 # (knuckle, case_h) covering each underside strategy and a span of disc sizes.
 CASES = [
@@ -149,7 +151,7 @@ def test_self_supporting(hinges, knuckle, case_h):
     """No exterior face on a ramp/teardrop leaf may overhang below 45 deg."""
     h = hinges[(knuckle, case_h)]
     res = _params(knuckle, case_h)._resolve()
-    axis_z, disc_r = res["pivot_z_offset"], res["Ro"]
+    axis_z, disc_r = case_h + res["pivot_z_offset"], res["Ro"]
     bed_z = h.bounding_box().min.Z
     bad = []
     for solid in h.solids():
@@ -163,7 +165,6 @@ def test_self_supporting(hinges, knuckle, case_h):
 def test_overhang_scanner_has_teeth():
     """Negative control: the scanner must flag a known overhang. A box lifted
     clear of the bed has a flat, downward-facing bottom (0 deg) that must trip."""
-    from build123d import Box, Pos
     box = Pos(0, 0, 10) * Box(8, 8, 4)        # bottom face at z=8, well above bed
     bad = _overhangs(box.solids()[0], bed_z=0.0)
     assert bad, "scanner failed to flag an obvious horizontal overhang"
@@ -181,7 +182,7 @@ def test_scanner_sees_disc_on_bed_overhang():
     bed_z = h.bounding_box().min.Z
     bad = []
     for solid in h.solids():
-        bad += _overhangs(solid, bed_z, res["pivot_z_offset"], res["Ro"])
+        bad += _overhangs(solid, bed_z, 12.0 + res["pivot_z_offset"], res["Ro"])
     assert bad, "scanner missed the disc-on-bed overhang; the FULL exclusion would be a blind spot"
 
 
@@ -218,7 +219,7 @@ def test_zero_mounting_flat_rejected():
 
 
 def test_bare_hinge_fragments_below_pivot_clearance():
-    """Documented design point (see examples/clamshell.py:_split_hinge_by_side):
+    """Documented design point (see PrintInPlaceHinge.cylinder_side / pin_side):
     a BARE hinge with mounting_flat <= pivot_clearance fragments into many solids.
     That is intentional -- it is meant to be fused into a case, where the walls
     bridge the tabs -- so it must NOT be 'fixed' with a guard. Lock the threshold
@@ -231,3 +232,88 @@ def test_bare_hinge_fragments_below_pivot_clearance():
     connected = make_hinge(HingeParams(mounting_flat=pc + 0.1, **common))
     assert len(fragmented.solids()) > 2          # intentional: fuses into a case
     assert len(connected.solids()) == 2          # bare hinge is whole above threshold
+
+
+def test_placed_frame_and_named_leaves():
+    """Bed at Z=0, leaves out to +/-leaf_width, axis at case_h + pivot_z_offset,
+    and the two leaves reachable by name whatever the solid count."""
+    h = PrintInPlaceHinge(case_h=10, hinge_length=60, knuckle=Knuckle.HALF,
+                          mounting_flat=1.0)
+    bb = h.bounding_box()
+    assert bb.min.Z == pytest.approx(0, abs=1e-6)
+    assert bb.max.X == pytest.approx(h.leaf_width)
+    assert bb.min.X == pytest.approx(-h.leaf_width)
+    assert h.axis_z == pytest.approx(10.2)
+    assert [c.label for c in h.children] == ["cylinder_side", "pin_side"]
+    assert h.cylinder_side.bounding_box().max.X == pytest.approx(h.leaf_width)
+    assert h.pin_side.bounding_box().min.X == pytest.approx(-h.leaf_width)
+    # fragmented leaves (mounting_flat <= pivot_clearance) still split cleanly
+    f = PrintInPlaceHinge(case_h=10, hinge_length=60, knuckle=Knuckle.HALF)
+    assert len(f.solids()) > 2
+    assert f.cylinder_side.bounding_box().max.X == pytest.approx(f.leaf_width)
+    assert f.pin_side.bounding_box().min.X == pytest.approx(-f.leaf_width)
+
+
+def test_make_hinge_matches_class():
+    p = HingeParams(case_h=10, hinge_length=60, knuckle=Knuckle.SMALL)
+    h = make_hinge(p)
+    assert isinstance(h, PrintInPlaceHinge) and h.params == p
+
+
+@pytest.mark.parametrize("knuckle", list(Knuckle))
+def test_leaf_flush_with_wall_top(knuckle):
+    """Issue #16: pivot_z_offset lifts the knuckle only; the mounting flat
+    must not stand proud of the wall top (Z = case_h)."""
+    h = PrintInPlaceHinge(case_h=10, hinge_length=60, knuckle=knuckle,
+                          mounting_flat=1.0, pivot_z_offset=2.0)
+    ro = h.params._resolve()["Ro"]
+    x = (ro + h.leaf_width) / 2                  # middle of the mounting flat
+    for leaf, sx in ((h.cylinder_side, 1), (h.pin_side, -1)):
+        top = (leaf & (Pos(sx * x, 0, 0) * Box(0.01, 100, 100))).bounding_box().max.Z
+        assert top == pytest.approx(10.0, abs=1e-6)
+
+
+def test_pivot_joint_folds_closed():
+    """Joint at 0 leaves pin_side where it was built; at 180 it folds onto
+    cylinder_side with the lid's wall top 2 x pivot_z_offset above the base's."""
+    h = PrintInPlaceHinge(case_h=10, hinge_length=60, knuckle=Knuckle.HALF,
+                          mounting_flat=1.0)
+    built = h.pin_side.bounding_box()
+    h.cylinder_side.joints["pivot"].connect_to(h.pin_side.joints["pivot"], angle=0)
+    at0 = h.pin_side.bounding_box()
+    assert at0.min.X == pytest.approx(built.min.X, abs=1e-6)
+    assert at0.min.Z == pytest.approx(built.min.Z, abs=1e-6)
+    h.cylinder_side.joints["pivot"].connect_to(h.pin_side.joints["pivot"], angle=180)
+    closed = h.pin_side.bounding_box()
+    assert closed.max.Z == pytest.approx(2 * h.axis_z)       # old bed face on top
+    assert closed.max.X == pytest.approx(h.leaf_width)       # over the base leaf
+
+
+def test_pivot_z_offset_must_be_below_knuckle_radius():
+    with pytest.raises(ValueError, match="pivot_z_offset"):
+        PrintInPlaceHinge(case_h=10, hinge_length=60, knuckle=Knuckle.SMALL,
+                          pivot_z_offset=4.0)   # Ro = 3.5
+
+
+def test_mount_joint_places_leaves_on_a_wall():
+    """A wall joint connected to cylinder_side's "mount" puts that leaf's
+    outer face on it; the pivot joint at 0 then brings pin_side along, and
+    the placed leaves fuse into the case where the joint put them."""
+    from build123d import Align, Location, RigidJoint
+    h = PrintInPlaceHinge(case_h=10, hinge_length=60, knuckle=Knuckle.HALF,
+                          mounting_flat=1.0)
+    wall = Box(20, 80, 10, align=(Align.MIN, Align.CENTER, Align.MIN))
+    wall = Pos(50, 20, 0) * wall                 # back face at X = 50, centred Y = 20
+    RigidJoint("hinge", wall, Location((50, 20, 0)))  # global: back face, bottom centre
+    wall.joints["hinge"].connect_to(h.cylinder_side.joints["mount"])
+    cs = h.cylinder_side.bounding_box()
+    assert cs.max.X == pytest.approx(50)
+    assert cs.center().Y == pytest.approx(20)
+    assert cs.min.Z == pytest.approx(0, abs=1e-6)
+    h.cylinder_side.joints["pivot"].connect_to(h.pin_side.joints["pivot"], angle=0)
+    ps = h.pin_side.bounding_box()
+    assert ps.min.X == pytest.approx(50 - 2 * h.leaf_width)
+    assert ps.min.Z == pytest.approx(0, abs=1e-6)
+    fused = wall + h.cylinder_side
+    assert len(fused.solids()) == 1
+    assert fused.bounding_box().min.X == pytest.approx(cs.min.X)   # leaf fused where placed

@@ -15,7 +15,7 @@ Generates four variants:
 
 All three share two settings that came out of real printing & assembly:
 
-  pivot_z_offset = 0.2 mm  (default on HingeParams)
+  pivot_z_offset = 0.2 mm  (default on PrintInPlaceHinge)
       Raises the hinge axis 0.2 mm above the wall top. The closed lid
       then sits 2·δ = 0.4 mm above the base instead of meeting it on a
       0-tolerance plane, so a high spot anywhere along the seam doesn't
@@ -23,12 +23,11 @@ All three share two settings that came out of real printing & assembly:
       open under its own elastic tension; with it, the front closes
       cleanly (and magnets, if fitted, latch it shut).
 
-      The HingeParams call below passes ``case_h = WALL_H`` (the actual
+      The PrintInPlaceHinge call below passes ``case_h = WALL_H`` (the actual
       wall height) and relies on the default ``pivot_z_offset = 0.2`` to
-      handle the lift. The hinge internally extends the leaf by
-      pivot_z_offset and lifts the disc so the axis sits at
-      ``WALL_H + pivot_z_offset`` once the hinge is positioned at the
-      wall top.
+      handle the lift. The hinge comes out on the bed with its leaves
+      flush with the wall top and only the knuckle raised, so the axis
+      sits at ``WALL_H + pivot_z_offset``.
 
   MAGNET pockets (6 × 3 mm) at the four front corners of the magnet
       variant. The pockets sit inside cylindrical bosses pushed into the
@@ -49,7 +48,7 @@ from pathlib import Path
 
 from build123d import Align, Box, Compound, Cylinder, export_step, export_stl
 
-from pip_hinge import HingeParams, Knuckle, make_hinge
+from pip_hinge import Knuckle, PrintInPlaceHinge
 
 
 # ── case dimensions ───────────────────────────────────────────────────────
@@ -60,7 +59,7 @@ WALL_T = 2.5
 HINGE_LENGTH = 60.0
 STATIONS = 6
 
-# HingeParams has pivot_z_offset = 0.2 mm by default — see module docstring.
+# PrintInPlaceHinge has pivot_z_offset = 0.2 mm by default — see module docstring.
 
 # ── magnet pocket geometry (6 mm × 3 mm neodymium discs) ──────────────────
 # Pocket slightly larger than the magnet: 0.1 mm radial clearance (0.2 mm
@@ -115,50 +114,22 @@ def add_corner_magnet_pockets(half, x_sign: int, leaf_outer_x: float):
     return half
 
 
-def _split_hinge_by_side(hinge):
-    """Sort the hinge's solids into cs-side (+X bias) and ps-side (-X bias).
-
-    For most parameter combinations make_hinge() returns exactly 2 solids
-    and unpacking ``cs, ps = .solids()`` would suffice. But for small
-    ``mounting_flat`` (specifically ``mounting_flat < pivot_clearance``)
-    the cs leaf strip collapses to zero/negative width — the cs body then
-    fragments into N/2 disc tabs and the ps body similarly into several
-    pieces. The fragments are still valid: in a clamshell they each fuse
-    into the case wall and the printed solid is fine. We just have to
-    classify by bbox X-centre instead of unpacking.
-    """
-    cs, ps = [], []
-    for s in hinge.solids():
-        bb = s.bounding_box()
-        (cs if (bb.min.X + bb.max.X) >= 0 else ps).append(s)
-    return Compound(cs), Compound(ps)
-
-
 def build_clamshell(knuckle: Knuckle, magnets: bool = False):
-    # All three variants use the default mounting_flat = 0.5 mm. The leaf
-    # strip vanishes (mflat < pivot_clearance = 0.6) so the bare hinge
-    # comes back fragmented, but each fragment fuses to the case wall
-    # cleanly via _split_hinge_by_side() above. Ramp self-support scales
-    # in our favour as the knuckle shrinks. Ramp angle from vertical:
-    #   FULL:  n/a (no ramp, knuckle bottom on bed)
-    #   HALF:  ~48° — past the strict 45° rule, but well within FDM's cooled
-    #          overhang capability (matches the user's printed-confirmed result)
-    #   SMALL: ~22° — comfortably self-supporting
-    params = HingeParams(
+    # All variants use the default mounting_flat = 0.5 mm. That is below
+    # pivot_clearance (0.6), so each bare leaf comes back as several solids,
+    # but hinge.cylinder_side / hinge.pin_side keep them grouped and each
+    # fragment fuses into its case wall.
+    hinge = PrintInPlaceHinge(
         case_h=WALL_H,                          # actual wall height
         hinge_length=HINGE_LENGTH,
         stations=STATIONS,
         knuckle=knuckle,
         # pivot_z_offset defaults to 0.2 mm — see module docstring
     )
-    # W is the leaf's outer face (X = Ro + mounting_flat), which is exactly
-    # where the case back wall sits. Pull it from the resolved params so we
-    # don't duplicate the knuckle-sizing formula here.
-    leaf_outer = params._resolve()["W"]
-
-    cs, ps = _split_hinge_by_side(make_hinge(params))
-    cs = cs.translate((0, 0, WALL_H))           # hinge positions to wall top;
-    ps = ps.translate((0, 0, WALL_H))           # axis ends up at WALL_H + pivot_z_offset
+    # The hinge comes out on the bed with its leaf outer faces at
+    # X = ±leaf_width, which is exactly where the case back walls sit.
+    leaf_outer = hinge.leaf_width
+    cs, ps = hinge.cylinder_side, hinge.pin_side
 
     base = hollow_half(+1, leaf_outer) + cs
     lid = hollow_half(-1, leaf_outer) + ps
