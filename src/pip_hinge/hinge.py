@@ -45,15 +45,28 @@ from build123d import (
 class Knuckle(Enum):
     """Knuckle size.
 
-    FULL and HALF are percentages of the closed-case height (2 × case_h);
-    SMALL is computed in ``_resolve()`` as max(case_h/2, 5 mm) — the 1/4-of-FULL
-    ratio with a 5 mm absolute floor that keeps the bore + pin big enough to
-    print reliably on a 0.4 mm-nozzle FDM regardless of case height.
+    FULL and HALF are percentages of twice the lifted wall height
+    (``2 × (case_h + pivot_z_offset)``). SMALL has diameter
+    ``max((case_h + pivot_z_offset)/2, 5 mm)``: one quarter of FULL with a
+    5 mm floor that leaves room for the bore and pin on small cases.
     """
 
-    FULL = 100   # Po = 2 × case_h; knuckle bottom touches bed, no ramp needed
-    HALF = 50    # Po = case_h; 45°-or-shallower self-supporting ramp
+    FULL = 100   # diameter = 2 × lifted wall height; bottom rests on bed
+    HALF = 50    # diameter = lifted wall height; self-supporting underside
     SMALL = -1   # sentinel — see _resolve() for the actual size formula
+
+
+class PinStyle(Enum):
+    """Shape of the pin captured inside the cylinder-side knuckles.
+
+    CONICAL uses 45-degree tips at each pin-side tab. ROUNDED retains the
+    original hemispherical tips. BRIDGED runs one cylindrical pin through
+    every knuckle. It is experimental: bridge sag can fuse the pin to a bore.
+    """
+
+    CONICAL = "conical"
+    ROUNDED = "rounded"
+    BRIDGED = "bridged"
 
 
 @dataclass(frozen=True)
@@ -64,22 +77,33 @@ class HingeParams:
     for what each one means. ``make_hinge(params)`` builds the hinge.
 
     Attributes:
-        case_h (float): case wall height (mm).
-        hinge_length (float): total hinge length along the axis (mm).
-        stations (int): alternating cylinder-side / pin-side tab count
-            (even, ≥ 2). Defaults to 6.
-        knuckle (Knuckle): knuckle size. Defaults to Knuckle.FULL.
-        mounting_flat (float): flat leaf width past the knuckle edge (mm).
-            Defaults to 0.5.
-        pivot_clearance (float): radial pin/bore gap (mm). Defaults to 0.6.
-        pivot_z_offset (float): lift of the hinge axis above the wall top
-            (mm). Defaults to 0.2.
-        clasp_clearance (float | None): axial gap between meshing tabs (mm);
-            None auto-scales with knuckle size. Defaults to None.
-        pin_cyl_extra (float): pin-engagement constant. Defaults to 1.5.
-        pin_end_offset (float): pin-engagement constant. Defaults to 0.5.
-        pin_short_cyl_factor (float): pin-engagement constant.
-            Defaults to 1/3.
+        case_h (float): height in mm of the case wall that each leaf joins.
+        hinge_length (float): total length in mm along the rotation axis (Y).
+        stations (int): number of alternating tab positions along Y; even
+            and at least 2. The two end tabs each occupy half a position.
+        knuckle (Knuckle): outer diameter of the round hinge barrels,
+            selected from FULL, HALF, or SMALL relative to the case height.
+        pin_style (PinStyle): conical tips, rounded tips, or one continuous pin.
+        knuckle_wall (float | None): wall thickness in mm around each bore.
+            None uses a printable wall for CONICAL and the original bore
+            size for ROUNDED and BRIDGED. Short conical hinges may need a
+            thicker wall so the tips fit within hinge_length.
+        mounting_flat (float): width in mm of the flat attachment strip beyond
+            each knuckle's outer edge, toward the case wall.
+        pivot_clearance (float): difference in mm between bore and pin
+            diameters; the radial gap on each side is half this value.
+        pivot_z_offset (float): height in mm of the rotation axis above the
+            case wall top. The closed seam gap is twice this value.
+        clasp_clearance (float | None): gap in mm along Y between adjacent
+            cylinder-side and pin-side tabs. None uses a 0.3 mm gap.
+        pin_cyl_extra (float): amount in mm added to one station width to
+            set each middle pin's straight shank length. Its protrusion
+            beyond each neighbouring tab face is half this plus half the
+            tab gap.
+        pin_end_offset (float): distance in mm that each end pin's straight
+            shank reaches from the end cap into the adjacent bore.
+        pin_short_cyl_factor (float): end pin shank length as a fraction of
+            one tab position's width; the rest is buried in the end cap.
     """
 
     case_h: float
@@ -93,16 +117,24 @@ class HingeParams:
     pin_cyl_extra: float = 1.5
     pin_end_offset: float = 0.5
     pin_short_cyl_factor: float = 1 / 3
+    pin_style: PinStyle = PinStyle.CONICAL
+    knuckle_wall: Optional[float] = None
 
     def _resolve(self) -> dict:
         if self.case_h <= 0:
             raise ValueError(f"case_h must be > 0 (got {self.case_h})")
         if self.hinge_length <= 0:
             raise ValueError(f"hinge_length must be > 0 (got {self.hinge_length})")
+        if isinstance(self.stations, bool) or not isinstance(self.stations, int):
+            raise ValueError(f"stations must be an even integer ≥ 2 (got {self.stations!r})")
         if self.stations < 2 or self.stations % 2 != 0:
             raise ValueError(
                 f"stations must be an even integer ≥ 2 (got {self.stations})"
             )
+        if not isinstance(self.knuckle, Knuckle):
+            raise ValueError(f"knuckle must be a Knuckle (got {self.knuckle!r})")
+        if not isinstance(self.pin_style, PinStyle):
+            raise ValueError(f"pin_style must be a PinStyle (got {self.pin_style!r})")
         if self.mounting_flat <= 0:
             # W == Ro at 0 gives a degenerate leaf profile that OCC rejects with a
             # cryptic StdFail_NotDone; fail early with a clear message instead.
@@ -119,8 +151,8 @@ class HingeParams:
         effective_case_h = self.case_h + self.pivot_z_offset
         if self.knuckle is Knuckle.SMALL:
             # 1/4 of FULL, floored at 5 mm so the pin & bore stay printable
-            # at any case height. For case_h ≥ 10 mm the ratio dominates;
-            # below that the 5 mm floor kicks in.
+            # at any case height. For effective_case_h ≥ 10 mm the ratio
+            # dominates; below that the 5 mm floor kicks in.
             Po = max(effective_case_h / 2, 5.0)
         else:
             Po = 2 * effective_case_h * self.knuckle.value / 100
@@ -130,30 +162,79 @@ class HingeParams:
                 f"pivot_z_offset ({self.pivot_z_offset}) must be < knuckle radius "
                 f"({Ro:.2f})"
             )
-        Pi = Po / 2                                  # bore diameter (= Ro)
-        if Pi <= self.pivot_clearance:
-            raise ValueError(
-                f"bore Ø ({Pi:.2f}) ≤ pivot_clearance ({self.pivot_clearance}); "
-                f"increase case_h or reduce pivot_clearance"
-            )
-
         Cw = self.hinge_length / self.stations
-        if Cw < 3:
+        # This is an FDM fit gap along Y, independent of knuckle diameter.
+        Cc = 0.3 if self.clasp_clearance is None else self.clasp_clearance
+        if Cc <= 0 or Cc >= Cw:
+            raise ValueError(
+                f"clasp_clearance must be > 0 and < station width {Cw:.2f} "
+                f"(got {Cc})"
+            )
+        tab_width = Cw - Cc
+        if tab_width < 3:
             warnings.warn(
-                f"clasp_width = {Cw:.2f}mm is below ~3mm; likely too thin for FDM. "
-                f"Reduce stations or increase hinge_length.",
+                f"tab width = {tab_width:.2f}mm is below ~3mm; likely too thin for FDM. "
+                "Reduce stations or increase hinge_length.",
                 stacklevel=3,
             )
+        if self.pin_style is not PinStyle.BRIDGED:
+            if (self.pin_cyl_extra < 0 or self.pin_end_offset < 0
+                    or not 0 < self.pin_short_cyl_factor <= 1):
+                raise ValueError(
+                    "pin shank lengths must be non-negative and "
+                    "pin_short_cyl_factor in (0, 1]"
+                )
+            end_shank = Cw * self.pin_short_cyl_factor
+            if not (self.pin_end_offset < end_shank
+                    <= self.pin_end_offset + tab_width / 2):
+                raise ValueError(
+                    "end pin shank must reach into its end cap without "
+                    "extending beyond the hinge end"
+                )
 
-        # Size-aware clasp_clearance default: scales linearly with knuckle
-        # diameter Po, from 0.2 mm at Po=5 mm to 0.4 mm at Po≥10 mm. The
-        # tighter fit matters more when the knuckle is small (relative
-        # play is bigger). Clamped both ends so very small or very large
-        # knuckles stay in the printable / sensible range.
-        if self.clasp_clearance is None:
-            Cc = max(0.2, min(0.4, 0.04 * Po))
+        max_tip_radius = None
+        if self.pin_style is not PinStyle.BRIDGED:
+            k = self.stations // 2
+            # Both conical and hemispherical tips extend along Y by their
+            # radius. Keep even the outermost tip inside hinge_length.
+            end_base = (k - 0.5) * Cw + Cc / 2 - self.pin_end_offset
+            max_tip_radius = self.hinge_length / 2 + end_base
+            if k > 1:
+                outer_middle = (k - 2) * Cw
+                middle_limit = (self.hinge_length / 2 - outer_middle
+                                - (Cw + self.pin_cyl_extra) / 2)
+                max_tip_radius = min(max_tip_radius, middle_limit)
+            if max_tip_radius <= 0:
+                raise ValueError(
+                    "pin_cyl_extra leaves no room for pin tips within hinge_length"
+                )
+
+        if self.knuckle_wall is None:
+            # The 45-degree cone can use most of the barrel radius while
+            # retaining at least 1 mm of material around the bore.
+            # Short hinges may need a thicker wall to keep the tips in bounds.
+            wall = (max(1.0, 0.1 * Ro,
+                        Ro - max_tip_radius - self.pivot_clearance / 2)
+                    if self.pin_style is PinStyle.CONICAL else Ro / 2)
         else:
-            Cc = self.clasp_clearance
+            wall = self.knuckle_wall
+        if wall <= 0 or wall >= Ro:
+            raise ValueError(
+                f"knuckle_wall must be > 0 and < knuckle radius {Ro:.2f} "
+                f"(got {wall})"
+            )
+        Pi = 2 * (Ro - wall)                       # bore diameter
+        if self.pivot_clearance <= 0 or Pi <= self.pivot_clearance:
+            raise ValueError(
+                f"pivot_clearance must be > 0 and smaller than bore Ø "
+                f"({Pi:.2f}); got {self.pivot_clearance}"
+            )
+        if (max_tip_radius is not None
+                and Pi / 2 - self.pivot_clearance / 2 > max_tip_radius + 1e-9):
+            raise ValueError(
+                "pin tips extend beyond hinge_length; increase hinge_length "
+                "or knuckle_wall, or reduce pin_cyl_extra"
+            )
         return {
             "case_h": self.case_h,
             "H": self.hinge_length,
@@ -162,10 +243,12 @@ class HingeParams:
             "Ro": Ro,
             "T": Ro,                                 # T = Ro by construction
             "Pi": Pi,
+            "knuckle_wall": wall,
             "Pc": self.pivot_clearance,
             "W": Ro + self.mounting_flat,
             "Cw": Cw,
             "Cc": Cc,
+            "pin_style": self.pin_style,
             "pivot_z_offset": self.pivot_z_offset,
             "pin_cyl_extra": self.pin_cyl_extra,
             "pin_end_offset": self.pin_end_offset,
@@ -179,8 +262,8 @@ def _cs_pocket_polyline(N: int, Cw: float, Cc: float, Xi: float, Xo_cs: float):
     """Pocket cut for the cs (cylinder-side) leaf. Excludes N/2 cs tabs.
 
     cs tabs (with bores in them) sit at Y centres spaced 2·Cw apart,
-    symmetric around Y = 0. Each tab is Cw − Cc wide (the Cc/2 margin
-    per side is the printable clearance between meshing cs and ps tabs).
+    symmetric around Y = 0. Each tab is Cw − Cc wide; the matching ps tabs
+    are the same width, leaving Cc between their neighbouring faces.
     """
     k = N // 2
     half_tab = (Cw - Cc) / 2
@@ -199,16 +282,17 @@ def _cs_pocket_polyline(N: int, Cw: float, Cc: float, Xi: float, Xo_cs: float):
     return Polyline(*pts)
 
 
-def _ps_pocket_polyline(N: int, Cw: float, Xi: float, Xo_ps: float):
+def _ps_pocket_polyline(N: int, Cw: float, Cc: float, Xi: float, Xo_ps: float):
     """Pocket cut for the ps (pin-side) leaf. Excludes ps end-caps + middle tabs.
 
-    Pattern along Y: ps_end_cap (Cw/2) | cs (Cw) | ps_middle (Cw) | cs | ... | ps_end_cap.
-    The ends are half-width ps caps; in between, full-Cw alternating cs/ps tabs,
-    starting and ending with cs.
+    Pattern along Y: ps end cap | cs | ps middle | cs | ... | ps end cap.
+    Middle ps and cs tabs are both Cw-Cc wide. Each end cap is
+    (Cw-Cc)/2 wide, leaving Cc between every adjacent pair of tabs.
     """
     k = N // 2
-    ps_outer = (k - 0.5) * Cw                # inner edge of the ps end-caps
+    ps_outer = (k - 0.5) * Cw + Cc / 2       # inner edge of the ps end-caps
     ps_centres = [(-(k - 2) + 2 * i) * Cw for i in range(k - 1)]
+    half_tab = (Cw - Cc) / 2
 
     pts = [
         (-Xi,   -ps_outer),
@@ -218,10 +302,10 @@ def _ps_pocket_polyline(N: int, Cw: float, Xi: float, Xo_ps: float):
     ]
     for Y_c in reversed(ps_centres):         # walk back down with notches
         pts.extend([
-            (-Xi, Y_c + Cw / 2),
-            (Xi,  Y_c + Cw / 2),
-            (Xi,  Y_c - Cw / 2),
-            (-Xi, Y_c - Cw / 2),
+            (-Xi, Y_c + half_tab),
+            (Xi,  Y_c + half_tab),
+            (Xi,  Y_c - half_tab),
+            (-Xi, Y_c - half_tab),
         ])
     pts.append((-Xi, -ps_outer))
     return Polyline(*pts)
@@ -229,13 +313,20 @@ def _ps_pocket_polyline(N: int, Cw: float, Xi: float, Xo_ps: float):
 
 # ── pin segments (parametric in N stations) ───────────────────────────────────
 
-def _pin_loops(N: int, Cw: float, Rp: float,
+def _pin_loops(N: int, Cw: float, Cc: float, Rp: float, style: PinStyle,
                pin_cyl_extra: float, pin_end_offset: float, pin_short: float):
     """2D pin profiles to be revolved around Y axis.
 
-    One long capsule per ps middle tab (N/2 − 1 of them) plus a bullet at each
-    end-cap (always 2). For N = 2 there are no middle tabs, so just 2 bullets.
+    A continuous cylinder for BRIDGED; otherwise one pin with two tips per
+    middle tab plus an inward-pointing pin at each end cap.
     """
+    if style is PinStyle.BRIDGED:
+        half_length = N * Cw / 2
+        return [Polyline(
+            (0, -half_length), (Rp, -half_length),
+            (Rp, half_length), (0, half_length), (0, -half_length),
+        )]
+
     k = N // 2
     long_centres = [(-(k - 2) + 2 * i) * Cw for i in range(k - 1)]
     cyl_long = Cw + pin_cyl_extra
@@ -247,39 +338,57 @@ def _pin_loops(N: int, Cw: float, Rp: float,
         y_bot = Y_c - half_long
         y_cap_t = y_top + Rp
         y_cap_b = y_bot - Rp
-        loops.append(
-            Line((Rp, y_top), (Rp, y_bot))
-            + CenterArc(center=(0, y_bot), radius=Rp, start_angle=360, arc_size=-90)
-            + Line((0, y_cap_b), (0, y_cap_t))
-            + CenterArc(center=(0, y_top), radius=Rp, start_angle=90, arc_size=-90)
-        )
+        if style is PinStyle.CONICAL:
+            loops.append(Polyline(
+                (Rp, y_top), (Rp, y_bot), (0, y_cap_b),
+                (0, y_cap_t), (Rp, y_top),
+            ))
+        else:
+            loops.append(
+                Line((Rp, y_top), (Rp, y_bot))
+                + CenterArc(center=(0, y_bot), radius=Rp, start_angle=360, arc_size=-90)
+                + Line((0, y_cap_b), (0, y_cap_t))
+                + CenterArc(center=(0, y_top), radius=Rp, start_angle=90, arc_size=-90)
+            )
 
-    # End-cap bullets: hemisphere on the inner end (pointing toward the centre),
-    # flat top buried inside the ps end-cap material.
-    end_inner = (k - 0.5) * Cw
+    # End-cap pins point toward the centre; their far ends are buried inside
+    # the ps end-cap material.
+    end_inner = (k - 0.5) * Cw + Cc / 2
     cyl_short = Cw * pin_short
     y_short_cyl_b = end_inner - pin_end_offset
     y_short_cyl_t = y_short_cyl_b + cyl_short
     y_short_cap_b = y_short_cyl_b - Rp
 
-    loops.append(                            # +Y end
-        Polyline(
+    if style is PinStyle.CONICAL:
+        loops.append(Polyline(
+            (0, y_short_cyl_t), (Rp, y_short_cyl_t),
+            (Rp, y_short_cyl_b), (0, y_short_cap_b),
             (0, y_short_cyl_t),
-            (Rp, y_short_cyl_t),
-            (Rp, y_short_cyl_b),
-        )
-        + CenterArc(center=(0, y_short_cyl_b), radius=Rp, start_angle=0, arc_size=-90)
-        + Line((0, y_short_cap_b), (0, y_short_cyl_t))
-    )
-    loops.append(                            # −Y end (mirror)
-        CenterArc(center=(0, -y_short_cyl_b), radius=Rp, start_angle=0, arc_size=90)
-        + Polyline(
-            (0, -y_short_cap_b),
+        ))
+        loops.append(Polyline(
+            (0, -y_short_cyl_t), (Rp, -y_short_cyl_t),
+            (Rp, -y_short_cyl_b), (0, -y_short_cap_b),
             (0, -y_short_cyl_t),
-            (Rp, -y_short_cyl_t),
-            (Rp, -y_short_cyl_b),
+        ))
+    else:
+        loops.append(                            # +Y end
+            Polyline(
+                (0, y_short_cyl_t),
+                (Rp, y_short_cyl_t),
+                (Rp, y_short_cyl_b),
+            )
+            + CenterArc(center=(0, y_short_cyl_b), radius=Rp, start_angle=0, arc_size=-90)
+            + Line((0, y_short_cap_b), (0, y_short_cyl_t))
         )
-    )
+        loops.append(                            # −Y end (mirror)
+            CenterArc(center=(0, -y_short_cyl_b), radius=Rp, start_angle=0, arc_size=90)
+            + Polyline(
+                (0, -y_short_cap_b),
+                (0, -y_short_cyl_t),
+                (Rp, -y_short_cyl_t),
+                (Rp, -y_short_cyl_b),
+            )
+        )
     return loops
 
 
@@ -386,11 +495,12 @@ def _build_leaves(p: dict) -> tuple[Compound, Compound]:
     ps_sketch = Sketch() + Plane.XZ * make_face(ps_profile)
     ps_pad = extrude(ps_sketch, amount=H / 2, both=True)
     Xo_ps = 4 * Po - Xi
-    ps_pocket = make_face(_ps_pocket_polyline(N, Cw, Xi, Xo_ps))
+    ps_pocket = make_face(_ps_pocket_polyline(N, Cw, Cc, Xi, Xo_ps))
     pin_side = ps_pad - extrude(ps_pocket, amount=pocket_extrude, both=True)
 
     # ── pin segments ────────────────────────────────────────────────────────
-    loops = _pin_loops(N, Cw, Rp, p["pin_cyl_extra"], p["pin_end_offset"], p["pin_short"])
+    loops = _pin_loops(N, Cw, Cc, Rp, p["pin_style"],
+                       p["pin_cyl_extra"], p["pin_end_offset"], p["pin_short"])
     pin_sketch = make_face(loops[0])
     for loop in loops[1:]:
         pin_sketch = pin_sketch + make_face(loop)
@@ -422,32 +532,40 @@ class PrintInPlaceHinge(Compound):
     hinge, so move the leaves rather than the hinge when fusing into a case.
 
     Args:
-        case_h (float): case wall height (mm); the hinge's scale reference.
-        hinge_length (float): total hinge length along the axis (mm).
-        stations (int, optional): number of alternating cylinder-side /
-            pin-side tabs; even, ≥ 2. Defaults to 6.
-        knuckle (Knuckle, optional): knuckle size. Defaults to Knuckle.FULL.
-        mounting_flat (float, optional): flat leaf width past the knuckle edge,
-            for fusing to the case wall (mm). At or below ``pivot_clearance``
-            the bare hinge fragments into several solids per leaf, which is
-            fine once fused into a case. Defaults to 0.5.
-        pivot_clearance (float, optional): radial pin/bore gap (mm).
-            Defaults to 0.6.
-        pivot_z_offset (float, optional): lift of the hinge axis above the
-            wall top (mm). When the case closes, the lid then sits
-            2 × pivot_z_offset above the base instead of meeting it on a
-            zero-tolerance plane, so a high spot along the seam can't spring
-            the front open. The leaves stay flush with the wall top; only the
-            knuckle is raised. 0 disables it. Defaults to 0.2.
-        clasp_clearance (float, optional): axial gap between meshing tabs (mm).
-            None scales it with knuckle diameter Po as
-            ``clamp(0.04 × Po, 0.2, 0.4)``. Defaults to None.
-        pin_cyl_extra (float, optional): pin-engagement constant from the
-            original FreeCAD source. Defaults to 1.5.
-        pin_end_offset (float, optional): pin-engagement constant from the
-            original FreeCAD source. Defaults to 0.5.
-        pin_short_cyl_factor (float, optional): pin-engagement constant from
-            the original FreeCAD source. Defaults to 1/3.
+        case_h (float): height in mm of the case wall each leaf attaches to.
+        hinge_length (float): hinge length in mm along its rotation axis (Y).
+        stations (int): number of alternating tab positions along Y; even
+            and at least 2. The two end tabs each take half a position.
+        knuckle (Knuckle): size of the round hinge barrels relative to case_h.
+        pin_style (PinStyle): CONICAL tips for 45-degree slopes, ROUNDED tips
+            as in the original hinge, or one continuous BRIDGED pin. BRIDGED
+            needs a printer-specific bridge and clearance test.
+        knuckle_wall (float | None): thickness in mm of the knuckle material
+            around its bore. None gives CONICAL a wall of at least 1.0 mm,
+            or uses the original half-radius wall for ROUNDED and BRIDGED.
+            On short hinges the conical wall grows to keep tips within the
+            stated length. Reduce only if your printer can make a thinner wall.
+        mounting_flat (float): width in mm of the flat leaf strip beyond the
+            knuckle edge where the case wall attaches. At or below
+            ``pivot_clearance`` the bare leaf may have separate solids; fusing
+            it to the case wall joins them.
+        pivot_clearance (float): difference in mm between the bore and pin
+            diameters. The radial gap between their surfaces is half this.
+        pivot_z_offset (float): height in mm of the axis above the case wall
+            top. This leaves a closed seam gap twice as large; the leaf tops
+            remain flush with the wall top. Zero removes the offset.
+        clasp_clearance (float | None): gap in mm along Y between adjacent
+            cylinder-side and pin-side tabs. None uses 0.3 mm, independent
+            of knuckle size. An explicit value overrides it.
+        pin_cyl_extra (float): amount in mm added to one station width to
+            determine each middle pin's straight shank length. The shank
+            protrudes ``(pin_cyl_extra + clasp_clearance) / 2`` beyond each
+            middle tab face.
+        pin_end_offset (float): distance in mm an end pin's straight shank
+            reaches into the neighbouring bore from its end cap.
+        pin_short_cyl_factor (float): end pin's straight shank length as a
+            fraction of one station width. The far end is buried in the cap.
+            These three shank settings do not affect BRIDGED pins.
 
     Attributes:
         params (HingeParams): the parameters the hinge was built from.
@@ -484,12 +602,16 @@ class PrintInPlaceHinge(Compound):
         pin_cyl_extra: float = 1.5,
         pin_end_offset: float = 0.5,
         pin_short_cyl_factor: float = 1 / 3,
+        pin_style: PinStyle = PinStyle.CONICAL,
+        knuckle_wall: Optional[float] = None,
     ):
         self.params = HingeParams(
             case_h=case_h,
             hinge_length=hinge_length,
             stations=stations,
             knuckle=knuckle,
+            pin_style=pin_style,
+            knuckle_wall=knuckle_wall,
             mounting_flat=mounting_flat,
             pivot_clearance=pivot_clearance,
             pivot_z_offset=pivot_z_offset,

@@ -6,7 +6,7 @@ designed for clamshell cases.
 Four inputs:
 
 ```python
-from pip_hinge import Knuckle, PrintInPlaceHinge
+from pip_hinge import Knuckle, PinStyle, PrintInPlaceHinge
 
 hinge = PrintInPlaceHinge(
     case_h        = 10,             # case wall height (mm)
@@ -16,6 +16,9 @@ hinge = PrintInPlaceHinge(
 )
 base_leaf, lid_leaf = hinge.cylinder_side, hinge.pin_side
 ```
+
+The default pin has 45° conical tips. Choose `PinStyle.ROUNDED` or the
+experimental `PinStyle.BRIDGED` with the `pin_style` argument when needed.
 
 `PrintInPlaceHinge` is a build123d `Compound` with two labelled children,
 one per leaf:
@@ -45,6 +48,8 @@ So for a base whose back wall's outer face is at X = x0, place the leaves
 themselves, not the hinge):
 
 ```python
+from build123d import Pos
+
 at = Pos(x0 - hinge.leaf_width, y_centre, 0)
 base = base + at * hinge.cylinder_side
 lid = lid + at * hinge.pin_side
@@ -65,6 +70,8 @@ face (X = ±`leaf_width`, Y = 0, Z = 0), axes aligned with the hinge frame. To
 attach the hinge to a case wall with joints instead of `Pos`:
 
 ```python
+from build123d import Location, RigidJoint
+
 RigidJoint("hinge", base, Location((x0, y_centre, 0)))    # back-wall outer face, bottom centre
 base.joints["hinge"].connect_to(hinge.cylinder_side.joints["mount"])
 hinge.cylinder_side.joints["pivot"].connect_to(hinge.pin_side.joints["pivot"], angle=0)
@@ -90,9 +97,9 @@ Cross-section (Panel A) shows the spatial parameters: `case_h` (wall
 height), `pivot_z_offset` (extra lift), `mounting_flat` (flat past the
 disc edge), plus the derived `Po`/`Ro`/`T`/`W` and the pin/bore inset.
 Top view (Panel B) shows `hinge_length`, `stations`, derived
-`clasp_width`, and `clasp_clearance` between meshing tabs.
+station pitch (`hinge_length / stations`), and `clasp_clearance` between tabs.
 
-## The two knuckle options
+## Knuckle sizes
 
 ![knuckle options](docs/diagrams/knuckle_options.png)
 
@@ -124,13 +131,12 @@ The original is a spreadsheet-driven FreeCAD model. This repository:
    `hinge_length`, `stations`, `knuckle`) with the original dimensional
    relationships derived under the hood.
 3. Generalises the comb pattern (hardcoded 6 stations in the original) to
-   any even number of stations ≥ 2, and adds an optional
-   `Knuckle.HALF` mode with a self-supporting teardrop knuckle for cases
-   where a smaller knuckle is wanted.
+   any even number of stations ≥ 2, adds optional `Knuckle.HALF` and
+   `Knuckle.SMALL` modes, and offers three pin profiles.
 
 Per the CC BY 4.0 terms: design and dimensional relationships are
-r0berts'; modifications are the build123d port, the four-input API, and
-the configurable station count and ramp.
+r0berts'; modifications are the build123d port, the four-input API, the
+configurable station count, knuckle sizes, pin profiles, and fit defaults.
 
 ## Quick start
 
@@ -168,23 +174,55 @@ The four primary inputs:
 
 | Parameter      | Default        | Meaning                                                  |
 | -------------- | -------------- | -------------------------------------------------------- |
-| `case_h`       | (required)     | Case wall height; the hinge's "scale" reference          |
-| `hinge_length` | (required)     | Total hinge length along the axis (Y)                    |
-| `stations`     | 6              | Number of alternating cylinder-side / pin-side tabs (even, ≥ 2) |
+| `case_h`       | (required)     | Height in mm of the case wall each leaf attaches to |
+| `hinge_length` | (required)     | Total hinge length in mm along the rotation axis (Y) |
+| `stations`     | 6              | Even count of tab positions along Y, at least 2. Each end cap occupies half a position; 4, 6, 8, … are supported |
 | `knuckle`      | `Knuckle.FULL` | `FULL`, `HALF`, or `SMALL` — see the option table below |
 
-Four small tuneables:
+Fit and pin options:
 
 | Parameter         | Default | Meaning                                            |
 | ----------------- | ------- | -------------------------------------------------- |
-| `mounting_flat`   | 0.5     | Flat width past the disc edge for case-wall fusion. Below `pivot_clearance` (= 0.6 mm) the bare hinge fragments into multiple solids — fine when fused into a case, see docs |
-| `pivot_clearance` | 0.6     | Radial pin/bore gap (FDM tolerance)                |
+| `pin_style`       | `PinStyle.CONICAL` | `CONICAL`: 45° tapered pin tips; `ROUNDED`: original hemispherical tips; `BRIDGED`: one continuous cylindrical pin through every bored tab. BRIDGED is experimental; test it on your printer before using it in a case |
+| `knuckle_wall`    | `None`  | Material thickness around the pin bore. `None` gives conical pins at least 1.0 mm of modeled wall, expanding the pin toward the knuckle radius; short hinges use a thicker wall to keep the tips inside the hinge length. Rounded and bridged pins retain the original half-radius wall. Check the actual perimeter count in your slicer; set a value in mm to override |
+| `mounting_flat`   | 0.5     | Width in mm of the flat leaf strip beyond the knuckle where the case wall joins. At or below `pivot_clearance` the bare leaf can contain separate solids that join when fused to the wall |
+| `pivot_clearance` | 0.6     | Difference in mm between bore and pin diameters. The radial gap is half this value: 0.3 mm by default |
 | `pivot_z_offset`  | 0.2     | Lift of the hinge axis above the wall top. When closed, the lid then rests `2 × pivot_z_offset` above the base instead of meeting it on a zero-tolerance plane, so a high spot along the seam can't spring the front of the case open. Only the knuckle is raised — the leaves stay flush with the wall top. `0` disables it; must be less than the knuckle radius |
-| `clasp_clearance` | `None`  | Axial gap between meshing tabs. `None` auto-scales with knuckle diameter `Po`: 0.2 mm at Po ≤ 5 mm (matches r0berts' original), linear up to 0.4 mm at Po ≥ 10 mm. Pass an explicit value to override |
+| `clasp_clearance` | `None`  | Gap in mm along Y between the facing ends of neighbouring cylinder-side and pin-side tabs. `None` uses 0.3 mm at every knuckle size; an explicit value overrides it |
 
-Plus three pin-engagement constants from the original FreeCAD source
-(`pin_cyl_extra`, `pin_end_offset`, `pin_short_cyl_factor`) — leave at
-defaults unless deliberately tuning the pin/bore feel.
+![Cutaway of a continuous bridged pin](docs/diagrams/bridged_pin.svg)
+
+`BRIDGED` makes the printer span each bored tab with an unsupported pin.
+The unsupported distance is approximately `hinge_length / stations +
+clasp_clearance`: 5.3 mm for a 20 mm hinge with 4 stations, or 10.3 mm at
+the 60 mm, 6-station defaults. The default `pivot_clearance` leaves only
+0.3 mm of radial space between the printed pin and bore. Sagging plastic
+can use up that space and fuse the hinge, even when the CAD solids are
+separate. Use `CONICAL` for a first print; tune `pivot_clearance` and
+`clasp_clearance` with a small test piece if trying `BRIDGED`.
+
+For 4 or more stations, the two middle tab types have the same width,
+`hinge_length / stations − clasp_clearance`. Each end cap has half that width.
+For example, a 20 mm hinge with 4 stations and the default gap has two
+4.7 mm cylinder-side tabs, one 4.7 mm pin-side middle tab, and two 2.35 mm
+end caps. The pin shank and tips extend into the bores beyond the middle
+tab; that visible pin is wider than the tab itself.
+
+Three advanced settings change the straight shanks of the `CONICAL` and
+`ROUNDED` pins. `pin_cyl_extra` adds to the station width to give the middle
+shank length; it protrudes `(pin_cyl_extra + clasp_clearance) / 2` past each
+middle tab face. `pin_end_offset` sets how far an end shank reaches into the
+next bore from its cap. `pin_short_cyl_factor × (hinge_length / stations)` is
+the total end shank length, including the portion buried in the cap. These
+settings do not affect the continuous `BRIDGED` pin.
+
+### Geometry changes in 0.3
+
+The default pin is now conical and uses a wider bore than the original
+rounded pin. `PinStyle.ROUNDED` retains the original pin tip profile and
+bore diameter. The automatic tab gap is now a fixed 0.3 mm measured between
+faces, with equal-width middle tabs on both sides. Re-export existing designs and check
+the pin and tab fit before relying on an older printed part.
 
 ## Validation
 
@@ -193,9 +231,11 @@ defaults unless deliberately tuning the pin/bore feel.
 - `stations < 2` or odd
 - negative `pivot_z_offset`, or one not smaller than the knuckle radius
 - bore Ø ≤ `pivot_clearance` (knuckle too small for the pivot clearance)
+- `knuckle_wall` outside the knuckle radius
+- invalid `pin_style` or clearances that leave no tab or pin material
 
 And warns (`warnings.warn`) when:
-- `clasp_width = hinge_length / stations` drops below ~3 mm (too thin for FDM)
+- tab width `hinge_length / stations − clasp_clearance` drops below ~3 mm (too thin for FDM)
 
 ## Printing
 
@@ -203,11 +243,11 @@ Lay flat on the bed with the hinge axis along Y (parallel to bed).
 0.2 mm layers, fan on, brim recommended. After printing, gently flex the
 leaves to break the clearance gaps free.
 
-- **FULL** prints without any supports at any knuckle size — the knuckle
-  rests on the bed.
-- **HALF** prints without supports at any `case_h`: the meshing-side underside
-  meets the knuckle tangentially at 45° and runs to the bed as a self-supporting
-  teardrop, so the disc's downward arc is never left hanging.
+- **FULL** knuckle body rests on the bed without supports. The optional
+  `BRIDGED` pin still requires an unsupported bridge through each bore.
+- **HALF** knuckle body has a self-supporting underside on valid sizes: it
+  meets the disc tangentially at 45° and runs to the bed as a teardrop.
+  The optional `BRIDGED` pin still needs a bridge test.
 
 ## How this was built
 
@@ -221,8 +261,9 @@ the code, generated the diagrams, ran the verifications, and opened the
 PRs. The conversation is the source of truth for *why* the code looks the
 way it does; the commit history reflects the steps.
 
-The original FreeCAD geometry from r0berts is unchanged in its dimensional
-relationships — it was reparameterised, not redesigned. The Claude
+The original FreeCAD geometry from r0berts provided the dimensional
+starting point. The current pin profiles and fit defaults also include
+changes described above. The Claude
 collaboration is on the build123d port and the case-designer-facing API
 built on top of it.
 

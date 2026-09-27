@@ -1,6 +1,7 @@
 # Diagrams
 
 Figures used in `docs/clamshell-integration.md` and the project README.
+`bridged_pin.svg` shows the continuous pin option in a lengthwise cutaway.
 
 ## Geometry diagrams (SVG → PNG)
 

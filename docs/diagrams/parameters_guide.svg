@@ -103,59 +103,59 @@
 <line x1="97" y1="35.00" x2="96.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
 <line x1="98" y1="35.00" x2="97.30" y2="35.90" stroke="#999" stroke-width="0.1"/>
 <text x="98.5" y="37.5" font-family="sans-serif" font-size="1.0" fill="#444" text-anchor="end">bed (Z=0)</text>
-<rect x="55.60" y="25.00" width="2.5" height="10.0" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
-<rect x="41.90" y="25.00" width="2.5" height="10.0" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
-<polygon points="55.10,24.80 55.60,24.80 55.60,35.00 50.00,29.90" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
-<polygon points="44.90,24.80 44.40,24.80 44.40,35.00 50.00,29.90" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
-<circle cx="50.00" cy="24.80" r="5.10" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.25"/>
-<circle cx="50.00" cy="24.80" r="2.55" fill="white" stroke="#3a2a00" stroke-width="0.18"/>
-<line x1="38.90" y1="35.00" x2="38.90" y2="25.00" stroke="#1a4a8a" stroke-width="0.18"/>
-<line x1="38.40" y1="35.00" x2="39.40" y2="35.00" stroke="#1a4a8a" stroke-width="0.18"/>
-<line x1="38.40" y1="25.00" x2="39.40" y2="25.00" stroke="#1a4a8a" stroke-width="0.18"/>
-<text x="37.40" y="30.00" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="end" alignment-baseline="middle">case_h = 10</text>
-<line x1="38.90" y1="25.00" x2="38.90" y2="24.80" stroke="#1a4a8a" stroke-width="0.18"/>
-<line x1="38.40" y1="25.00" x2="39.40" y2="25.00" stroke="#1a4a8a" stroke-width="0.18"/>
-<line x1="38.40" y1="24.80" x2="39.40" y2="24.80" stroke="#1a4a8a" stroke-width="0.18"/>
-<text x="38.90" y="24.90" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="end" alignment-baseline="middle"></text>
-<text x="37.40" y="22.90" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="end">PIVOT_Z_OFFSET</text>
-<text x="37.40" y="24.30" font-family="sans-serif" font-size="1.0" fill="#1a4a8a" text-anchor="end">= 0.2</text>
-<line x1="59.10" y1="29.90" x2="59.10" y2="19.70" stroke="#7a3a00" stroke-width="0.18"/>
-<line x1="58.60" y1="29.90" x2="59.60" y2="29.90" stroke="#7a3a00" stroke-width="0.18"/>
-<line x1="58.60" y1="19.70" x2="59.60" y2="19.70" stroke="#7a3a00" stroke-width="0.18"/>
-<text x="61.60" y="24.80" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="end" alignment-baseline="middle">Po = 10.2</text>
-<text x="61.60" y="26.20" font-family="sans-serif" font-size="1.0" fill="#7a3a00">(Ro = Po/2, T = Ro)</text>
-<line x1="50.00" y1="21.30" x2="55.60" y2="21.30" stroke="#7a3a00" stroke-width="0.18"/>
-<line x1="50.00" y1="20.80" x2="50.00" y2="21.80" stroke="#7a3a00" stroke-width="0.18"/>
-<line x1="55.60" y1="20.80" x2="55.60" y2="21.80" stroke="#7a3a00" stroke-width="0.18"/>
-<text x="52.80" y="20.30" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="middle">W = Ro + mounting_flat = 5.6</text>
-<line x1="55.10" y1="37.50" x2="55.60" y2="37.50" stroke="#1a4a8a" stroke-width="0.18"/>
-<line x1="55.10" y1="37.00" x2="55.10" y2="38.00" stroke="#1a4a8a" stroke-width="0.18"/>
-<line x1="55.60" y1="37.00" x2="55.60" y2="38.00" stroke="#1a4a8a" stroke-width="0.18"/>
-<text x="55.35" y="38.80" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="middle">mounting_flat = 0.5</text>
-<circle cx="88.35" cy="17.65" r="9.65" fill="white" stroke="#888" stroke-width="0.2"/>
-<circle cx="88.35" cy="17.65" r="7.65" fill="rgba(220,170,70,0.25)" stroke="#3a2a00" stroke-width="0.2"/>
-<circle cx="88.35" cy="17.65" r="6.75" fill="rgba(100,120,150,0.35)" stroke="#1a3a60" stroke-width="0.2"/>
-<text x="88.35" y="7.40" font-family="sans-serif" font-size="1.0" fill="#666" text-anchor="middle">pin / bore detail (3×)</text>
-<text x="77.70" y="16.05" font-family="sans-serif" font-size="1.0" fill="#7a3a00" text-anchor="end">Pi = 5.1 (bore Ø)</text>
-<text x="77.70" y="17.45" font-family="sans-serif" font-size="1.0" fill="#7a3a00" text-anchor="end">2·Rp = 4.5 (pin Ø)</text>
-<text x="77.70" y="18.85" font-family="sans-serif" font-size="1.0" fill="#1a4a8a" text-anchor="end">pivot_clearance = 0.6 (radial gap × 2)</text>
-<line x1="52.55" y1="24.80" x2="81.59" y2="24.40" stroke="#888" stroke-width="0.18" stroke-dasharray="0.5,0.5"/>
+<rect x="43.60" y="25.00" width="2.5" height="10.0" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
+<rect x="29.90" y="25.00" width="2.5" height="10.0" fill="#cdcdcd" stroke="#555" stroke-width="0.18"/>
+<polygon points="43.10,24.80 43.60,24.80 43.60,35.00 38.00,29.90" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
+<polygon points="32.90,24.80 32.40,24.80 32.40,35.00 38.00,29.90" fill="rgba(70,140,220,0.45)" stroke="#1a4a8a" stroke-width="0.22"/>
+<circle cx="38.00" cy="24.80" r="5.10" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.25"/>
+<circle cx="38.00" cy="24.80" r="4.10" fill="white" stroke="#3a2a00" stroke-width="0.18"/>
+<line x1="26.90" y1="35.00" x2="26.90" y2="25.00" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="26.40" y1="35.00" x2="27.40" y2="35.00" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="26.40" y1="25.00" x2="27.40" y2="25.00" stroke="#1a4a8a" stroke-width="0.18"/>
+<text x="25.40" y="30.00" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="end" alignment-baseline="middle">case_h = 10</text>
+<line x1="26.90" y1="25.00" x2="26.90" y2="24.80" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="26.40" y1="25.00" x2="27.40" y2="25.00" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="26.40" y1="24.80" x2="27.40" y2="24.80" stroke="#1a4a8a" stroke-width="0.18"/>
+<text x="26.90" y="24.90" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="end" alignment-baseline="middle"></text>
+<text x="25.40" y="22.90" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="end">PIVOT_Z_OFFSET</text>
+<text x="25.40" y="24.30" font-family="sans-serif" font-size="1.0" fill="#1a4a8a" text-anchor="end">= 0.2</text>
+<line x1="47.10" y1="29.90" x2="47.10" y2="19.70" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="46.60" y1="29.90" x2="47.60" y2="29.90" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="46.60" y1="19.70" x2="47.60" y2="19.70" stroke="#7a3a00" stroke-width="0.18"/>
+<text x="49.60" y="24.80" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="end" alignment-baseline="middle">Po = 10.2</text>
+<text x="49.60" y="26.20" font-family="sans-serif" font-size="1.0" fill="#7a3a00">(Ro = Po/2, T = Ro)</text>
+<line x1="38.00" y1="16.80" x2="43.60" y2="16.80" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="38.00" y1="16.30" x2="38.00" y2="17.30" stroke="#7a3a00" stroke-width="0.18"/>
+<line x1="43.60" y1="16.30" x2="43.60" y2="17.30" stroke="#7a3a00" stroke-width="0.18"/>
+<text x="40.80" y="15.80" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="middle">W = Ro + mounting_flat = 5.6</text>
+<line x1="43.10" y1="35.50" x2="43.60" y2="35.50" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="43.10" y1="35.00" x2="43.10" y2="36.00" stroke="#1a4a8a" stroke-width="0.18"/>
+<line x1="43.60" y1="35.00" x2="43.60" y2="36.00" stroke="#1a4a8a" stroke-width="0.18"/>
+<text x="43.35" y="36.80" font-family="sans-serif" font-size="1.2" fill="#1a4a8a" text-anchor="middle">mounting_flat = 0.5</text>
+<circle cx="83.70" cy="22.30" r="14.30" fill="white" stroke="#888" stroke-width="0.2"/>
+<circle cx="83.70" cy="22.30" r="12.30" fill="rgba(220,170,70,0.25)" stroke="#3a2a00" stroke-width="0.2"/>
+<circle cx="83.70" cy="22.30" r="11.40" fill="rgba(100,120,150,0.35)" stroke="#1a3a60" stroke-width="0.2"/>
+<text x="83.70" y="7.40" font-family="sans-serif" font-size="1.0" fill="#666" text-anchor="middle">pin / bore detail (3×)</text>
+<text x="68.40" y="10.0" font-family="sans-serif" font-size="1.0" fill="#7a3a00" text-anchor="end">Pi = 8.2 (bore Ø)</text>
+<text x="68.40" y="11.5" font-family="sans-serif" font-size="1.0" fill="#7a3a00" text-anchor="end">2·Rp = 7.6 (pin Ø)</text>
+<text x="68.40" y="13.0" font-family="sans-serif" font-size="1.0" fill="#1a4a8a" text-anchor="end">pivot_clearance = 0.6 (radial gap = 0.3)</text>
+<line x1="42.10" y1="24.80" x2="73.69" y2="32.31" stroke="#888" stroke-width="0.18" stroke-dasharray="0.5,0.5"/>
 </g>
 <g transform="translate(0, 42)">
 <rect x="0.1" y="0.1" width="99.8" height="29.8" fill="#fafafa" stroke="#ccc" stroke-width="0.1"/>
 <text x="1" y="2.5" font-family="sans-serif" font-size="1.2" font-weight="bold">Panel B — Top view (X-Y plane), one cs leaf</text>
-<text x="1" y="4.2" font-family="sans-serif" font-size="1.0" fill="#666">hinge_length=60, stations=6, clasp_width=10.0, clasp_clearance=0.4</text>
+<text x="1" y="4.2" font-family="sans-serif" font-size="1.0" fill="#666">hinge_length=60, stations=6, station_pitch=10.0, clasp_clearance=0.3</text>
 <rect x="12.00" y="12.00" width="82.00" height="11.00" fill="rgba(70,140,220,0.20)" stroke="#1a4a8a" stroke-width="0.15"/>
-<rect x="19.11" y="17.00" width="13.12" height="7.00" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.2"/>
+<rect x="19.04" y="17.00" width="13.26" height="7.00" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.2"/>
 <circle cx="25.67" cy="20.50" r="0.7" fill="white" stroke="#3a2a00" stroke-width="0.15"/>
-<rect x="46.44" y="17.00" width="13.12" height="7.00" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.2"/>
+<rect x="46.37" y="17.00" width="13.26" height="7.00" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.2"/>
 <circle cx="53.00" cy="20.50" r="0.7" fill="white" stroke="#3a2a00" stroke-width="0.15"/>
-<rect x="73.77" y="17.00" width="13.12" height="7.00" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.2"/>
+<rect x="73.70" y="17.00" width="13.26" height="7.00" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.2"/>
 <circle cx="80.33" cy="20.50" r="0.7" fill="white" stroke="#3a2a00" stroke-width="0.15"/>
-<rect x="32.50" y="17.00" width="13.67" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
-<rect x="59.83" y="17.00" width="13.67" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
-<rect x="12.00" y="17.00" width="6.83" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
-<rect x="87.17" y="17.00" width="6.83" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
+<rect x="32.70" y="17.00" width="13.26" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
+<rect x="60.04" y="17.00" width="13.26" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
+<rect x="12.00" y="17.00" width="6.63" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
+<rect x="87.37" y="17.00" width="6.63" height="7.00" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.4,0.3"/>
 <line x1="12.00" y1="27.00" x2="94.00" y2="27.00" stroke="#1a4a8a" stroke-width="0.18"/>
 <line x1="12.00" y1="26.50" x2="12.00" y2="27.50" stroke="#1a4a8a" stroke-width="0.18"/>
 <line x1="94.00" y1="26.50" x2="94.00" y2="27.50" stroke="#1a4a8a" stroke-width="0.18"/>
@@ -163,10 +163,10 @@
 <line x1="46.17" y1="15.20" x2="59.83" y2="15.20" stroke="#7a3a00" stroke-width="0.18"/>
 <line x1="46.17" y1="14.70" x2="46.17" y2="15.70" stroke="#7a3a00" stroke-width="0.18"/>
 <line x1="59.83" y1="14.70" x2="59.83" y2="15.70" stroke="#7a3a00" stroke-width="0.18"/>
-<text x="53.00" y="13.90" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="middle">clasp_width = hinge_length/stations = 10.0</text>
-<text x="59.83" y="25.00" font-family="sans-serif" font-size="1.0" fill="#1a4a8a" text-anchor="middle">clasp_clearance = 0.4</text>
-<line x1="59.56" y1="17.30" x2="59.56" y2="23.70" stroke="#1a4a8a" stroke-width="0.15"/>
-<line x1="60.11" y1="17.30" x2="60.11" y2="23.70" stroke="#1a4a8a" stroke-width="0.15"/>
+<text x="53.00" y="13.90" font-family="sans-serif" font-size="1.2" fill="#7a3a00" text-anchor="middle">station pitch = hinge_length/stations = 10.0</text>
+<text x="59.83" y="25.00" font-family="sans-serif" font-size="1.0" fill="#1a4a8a" text-anchor="middle">clasp_clearance = 0.3</text>
+<line x1="59.63" y1="17.30" x2="59.63" y2="23.70" stroke="#1a4a8a" stroke-width="0.15"/>
+<line x1="60.04" y1="17.30" x2="60.04" y2="23.70" stroke="#1a4a8a" stroke-width="0.15"/>
 <rect x="12.00" y="27.30" width="2.2" height="1.2" fill="rgba(220,170,70,0.55)" stroke="#3a2a00" stroke-width="0.12"/>
 <text x="15.00" y="28.30" font-family="sans-serif" font-size="1.0">cs tab (with bore)</text>
 <rect x="37.00" y="27.30" width="2.2" height="1.2" fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" stroke-dasharray="0.3,0.3"/>

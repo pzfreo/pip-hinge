@@ -1,10 +1,10 @@
 """Tests for the print-in-place piano hinge.
 
-The headline guarantee of this library is that `make_hinge` emits geometry that
-prints flat WITHOUT slicer support: every exterior downward-facing surface is at
-least 45 deg from horizontal. SMALL knuckles reach the bed with a tangent ramp,
-HALF knuckles with a self-supporting teardrop, FULL knuckles rest the disc on the
-bed. These tests build hinges across that range and assert:
+The default hinge is designed to print flat without slicer support: SMALL
+knuckles reach the bed with a tangent ramp, HALF knuckles with a self-supporting
+teardrop, and FULL knuckles rest the disc on the bed. The optional BRIDGED pin
+requires unsupported spans inside the bores and needs a real printer test.
+These tests build hinges across that range and assert:
 
   * the build succeeds and is a valid, manifold, multi-solid Compound;
   * the two leaves do not fuse or collide (a positive print-in-place gap);
@@ -30,7 +30,7 @@ from OCP.BRepExtrema import BRepExtrema_DistShapeShape
 
 from build123d import Box, Pos
 
-from pip_hinge import HingeParams, Knuckle, PrintInPlaceHinge, make_hinge
+from pip_hinge import HingeParams, Knuckle, PinStyle, PrintInPlaceHinge, make_hinge
 
 # (knuckle, case_h) covering each underside strategy and a span of disc sizes.
 CASES = [
@@ -258,6 +258,105 @@ def test_make_hinge_matches_class():
     p = HingeParams(case_h=10, hinge_length=60, knuckle=Knuckle.SMALL)
     h = make_hinge(p)
     assert isinstance(h, PrintInPlaceHinge) and h.params == p
+
+
+def test_four_station_tabs_share_width_and_have_requested_gap():
+    """Issue #16: the centre ps barrel must not consume two stations, and
+    clasp_clearance must be the measured gap between adjacent tab faces."""
+    h = PrintInPlaceHinge(case_h=10, hinge_length=20, stations=4,
+                          knuckle=Knuckle.SMALL, mounting_flat=1.0)
+    r = h.params._resolve()
+    assert r["Cc"] == pytest.approx(0.3)
+    assert r["Cw"] == pytest.approx(5.0)
+    # Probe the barrel outside its bore and pin, at the height of the axis.
+    x = (r["Pi"] / 2 + r["Ro"]) / 2
+    probe = Pos(x, 0, h.axis_z) * Box(0.01, 22, 0.01)
+    def spans(part):
+        return sorted((s.bounding_box().min.Y, s.bounding_box().max.Y)
+                      for s in (part & probe).solids())
+    cs, ps = spans(h.cylinder_side), spans(h.pin_side)
+    assert len(cs) == 2 and len(ps) == 3
+    for actual, expected in zip(cs, [(-7.35, -2.65), (2.65, 7.35)]):
+        assert actual == pytest.approx(expected, abs=0.01)
+    for actual, expected in zip(ps, [(-10, -7.65), (-2.35, 2.35), (7.65, 10)]):
+        assert actual == pytest.approx(expected, abs=0.01)
+
+
+@pytest.mark.parametrize("style", list(PinStyle))
+@pytest.mark.parametrize("stations", [2, 4, 6])
+def test_pin_styles_are_valid_and_keep_leaves_separate(style, stations):
+    """Issue #20: each pin option builds a captured pin with print clearance.
+    Only BRIDGED must span the entire hinge axis without a gap."""
+    h = PrintInPlaceHinge(case_h=10, hinge_length=stations * 5,
+                          stations=stations, knuckle=Knuckle.SMALL,
+                          pin_style=style, mounting_flat=1.0)
+    assert h.is_valid and len(h.solids()) == 2
+    dss = BRepExtrema_DistShapeShape(
+        h.cylinder_side.solids()[0].wrapped, h.pin_side.solids()[0].wrapped)
+    dss.Perform()
+    assert dss.Value() > 0.05
+    axis_probe = Pos(0, 0, h.axis_z) * Box(0.01, stations * 5 + 2, 0.01)
+    axis_solids = (h.pin_side & axis_probe).solids()
+    if style is PinStyle.BRIDGED:
+        assert len(axis_solids) == 1
+        assert axis_solids[0].bounding_box().size.Y == pytest.approx(stations * 5)
+    else:
+        assert len(axis_solids) == stations // 2 + 1
+
+
+def test_clearance_inputs_reject_colliding_geometry():
+    with pytest.raises(ValueError, match="pivot_clearance"):
+        HingeParams(case_h=10, hinge_length=20, pivot_clearance=0)._resolve()
+    with pytest.raises(ValueError, match="clasp_clearance"):
+        HingeParams(case_h=10, hinge_length=20, stations=4,
+                    clasp_clearance=5)._resolve()
+
+
+def test_conical_pin_uses_more_of_knuckle_without_losing_wall_or_clearance():
+    """The larger conical pin in #20 retains at least 1 mm of modeled bore wall and
+    the same pin/bore fit; the rounded and bridged options retain old sizing."""
+    conical = HingeParams(case_h=10, hinge_length=60,
+                          pin_style=PinStyle.CONICAL)._resolve()
+    rounded = HingeParams(case_h=10, hinge_length=60,
+                          pin_style=PinStyle.ROUNDED)._resolve()
+    assert conical["knuckle_wall"] >= 1.0
+    assert conical["Pi"] > rounded["Pi"]
+    assert conical["Pi"] / 2 - conical["Pc"] / 2 > 0.8 * conical["Ro"]
+    small = HingeParams(case_h=10, hinge_length=60,
+                        knuckle=Knuckle.SMALL)._resolve()
+    assert conical["Cc"] == rounded["Cc"] == small["Cc"] == pytest.approx(0.3)
+
+
+def test_short_full_knuckle_cone_stays_within_hinge_length():
+    """A 20 mm, four-station hinge must not grow a pin past its end caps."""
+    h = PrintInPlaceHinge(case_h=10, hinge_length=20, stations=4,
+                          knuckle=Knuckle.FULL, mounting_flat=1.0)
+    assert h.is_valid
+    assert h.bounding_box().min.Y == pytest.approx(-10)
+    assert h.bounding_box().max.Y == pytest.approx(10)
+    assert h.params._resolve()["knuckle_wall"] > 1.0
+    with pytest.raises(ValueError, match="hinge_length"):
+        HingeParams(case_h=10, hinge_length=20, stations=4,
+                    knuckle_wall=1.0)._resolve()
+
+
+def test_rounded_pin_rejects_length_overrun():
+    """A short hinge must fail clearly if a rounded tip would cross its end."""
+    with pytest.raises(ValueError, match="hinge_length"):
+        HingeParams(case_h=10, hinge_length=20, stations=6,
+                    knuckle=Knuckle.FULL, pin_style=PinStyle.ROUNDED)._resolve()
+
+
+@pytest.mark.parametrize("stations", [2.0, True, "4"])
+def test_station_count_requires_an_integer(stations):
+    with pytest.raises(ValueError, match="stations"):
+        HingeParams(case_h=10, hinge_length=20, stations=stations)._resolve()
+
+
+def test_thin_tab_warning_uses_printed_width():
+    # Pitch is 3.1 mm, but a 0.3 mm face gap leaves only 2.8 mm of material.
+    with pytest.warns(UserWarning, match="tab width = 2.80mm"):
+        HingeParams(case_h=10, hinge_length=12.4, stations=4)._resolve()
 
 
 @pytest.mark.parametrize("knuckle", list(Knuckle))
