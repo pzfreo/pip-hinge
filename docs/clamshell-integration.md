@@ -13,15 +13,15 @@ case wall itself.
 ## The four inputs
 
 ```python
-from pip_hinge import HingeParams, Knuckle, make_hinge
+from pip_hinge import Knuckle, PrintInPlaceHinge
 
-hinge = make_hinge(HingeParams(
+hinge = PrintInPlaceHinge(
     case_h        = 10,             # case wall height (mm)
     hinge_length  = 60,             # total hinge length along its axis (mm)
-    stations      = 6,              # alternating cs/ps tab count (even, ≥ 2)
+    stations      = 6,              # alternating tab count (even, ≥ 2)
     knuckle       = Knuckle.FULL,   # FULL = no ramp; HALF = 45° self-supporting ramp
-))
-cylinder_side, pin_side = hinge.solids()
+)
+cylinder_side, pin_side = hinge.cylinder_side, hinge.pin_side
 ```
 
 Everything else (knuckle diameter, leaf width, pin radius, pocket clearances)
@@ -97,25 +97,31 @@ the bed.
 
 ## Coordinate convention
 
-`make_hinge()` returns the hinge centred on the origin:
+`PrintInPlaceHinge` comes out already placed for a flat-open case whose walls
+stand on the bed:
 
-- Hinge axis runs along **Y** through `(X=0, Z=0)`.
-- `cylinder_side` leaf extends in **+X**, `pin_side` leaf in **−X**.
-- Leaf top sits at `Z = 0`; leaf bottom at `Z = -case_h`.
-- Knuckle is centred at `(0, 0)`, radius `Po/2`, extending up to `Z = +Po/2`.
+- Bed at `Z = 0`; leaf tops flush with the wall top at `Z = case_h`.
+- Hinge axis runs along **Y** through `(X = 0, Z = case_h + pivot_z_offset)`
+  (`hinge.axis_z`).
+- `cylinder_side` leaf extends to `X = +hinge.leaf_width`, `pin_side` to
+  `X = −hinge.leaf_width`; the case back walls butt against these faces.
+- Knuckle is centred on the axis, radius `Po/2`.
 - Y range: `[−hinge_length/2, +hinge_length/2]`.
 
-To position the hinge into a clamshell case in the **flat-open** orientation
-(lid + base coplanar on the bed), translate so the axis sits at the wall
-top:
+To put the hinge against a base whose back-wall outer face is at `X = x0`,
+move the leaves (children are relative to their parent in build123d, so
+moving the hinge itself does not move `hinge.cylinder_side`):
 
 ```python
-hinge = make_hinge(params).translate((X_axis, Y_offset, case_h))
+at = Pos(x0 - hinge.leaf_width, y_centre, 0)
+base = base + at * hinge.cylinder_side
+lid  = lid  + at * hinge.pin_side
 ```
 
 ## Stations
 
-`stations` is the count of alternating cs/ps tabs along the hinge length.
+`stations` is the count of alternating tabs along the hinge length
+(cs = cylinder side, ps = pin side).
 Must be even and ≥ 2. `clasp_width = hinge_length / stations`.
 
 | stations | tabs                                          | typical use         |
@@ -145,27 +151,22 @@ line). You position them at different Y offsets along that axis.
 
 ## Attaching the hinge to the case
 
-Take the two solids from `make_hinge()`, position them on the case's back
+Take the two leaves (`hinge.cylinder_side`, `hinge.pin_side`), position them on the case's back
 edge, and boolean-union them into the case bodies.
 
 For a clamshell with both halves coplanar on the bed during print:
 
 ```python
-cs, ps = make_hinge(HingeParams(
-    case_h=wall_h, hinge_length=back_edge_len, knuckle=Knuckle.FULL,
-)).solids()
-
-cs_positioned = cs.translate((0, 0, wall_h))   # axis on top of base wall
-ps_positioned = ps.translate((0, 0, wall_h))
-
-base_body = base_body + cs_positioned
-lid_body  = lid_body  + ps_positioned
+hinge = PrintInPlaceHinge(case_h=wall_h, hinge_length=back_edge_len,
+                          knuckle=Knuckle.FULL)
+base_body = base_body + hinge.cylinder_side
+lid_body  = lid_body  + hinge.pin_side
 ```
 
-The leaf's outer face (at `X = W`) is where the case wall attaches.
+The leaf's outer face (at `X = hinge.leaf_width`) is where the case wall attaches.
 `mounting_flat` controls the flat strip of leaf material past the disc edge
 that the wall actually glues / fuses to — 0.5 mm is the default and is
-deliberately below the `pivot_clearance` so the cs body fragments at the
+deliberately below the `pivot_clearance` so the cylinder-side leaf fragments at the
 disc-edge level. Those fragments still share their outer face with the case
 wall and fuse cleanly on boolean union. Increase `mounting_flat` for a
 larger glue surface at the cost of a wider gap between case halves.
@@ -173,15 +174,13 @@ larger glue surface at the cost of a wider gap between case halves.
 ### Multi-hinge variant
 
 ```python
+hinge = PrintInPlaceHinge(case_h=wall_h, hinge_length=50, knuckle=Knuckle.FULL)
 for y_centre in [-100, 0, 100]:
-    cs, ps = make_hinge(HingeParams(
-        case_h=wall_h, hinge_length=50, knuckle=Knuckle.FULL,
-    )).solids()
-    base = base + cs.translate((0, y_centre, wall_h))
-    lid  = lid  + ps.translate((0, y_centre, wall_h))
+    base = base + Pos(0, y_centre, 0) * hinge.cylinder_side
+    lid  = lid  + Pos(0, y_centre, 0) * hinge.pin_side
 ```
 
-All hinges sit on the same axis (`Z = wall_h`), at different Y positions.
+All hinges sit on the same axis (`Z = wall_h + pivot_z_offset`), at different Y positions.
 
 ## Print orientation
 
@@ -189,7 +188,8 @@ The natural orientation is **flat-open**: lid and base coplanar on the bed,
 walls extending up, hinge axis at the top of the back walls.
 
 - **Knuckle.FULL**: knuckle bottom rests on the bed at `Z = 0` (since
-  `Po = 2 × case_h` and the axis is at `Z = case_h`). No ramp, no
+  `Po = 2 × (case_h + pivot_z_offset)` and the axis is at
+  `Z = case_h + pivot_z_offset`). No ramp, no
   in-air bridging. Prints cleanly regardless of knuckle size.
 - **Knuckle.HALF**: knuckle bottom hovers at `Z = case_h / 2`. The 45°
   ramps on each leaf converge at the knuckle bottom, supporting it from
@@ -234,7 +234,7 @@ Sketch:
 
 ```python
 from build123d import Align, Box, Compound, export_stl
-from pip_hinge import HingeParams, Knuckle, make_hinge
+from pip_hinge import Knuckle, PrintInPlaceHinge
 
 CASE_H, CASE_W, CASE_D, WALL_T = 10, 80, 50, 2.5
 
@@ -247,36 +247,26 @@ def hollow_half(x_sign, leaf_outer_x):
                 align=align).translate((x_min + WALL_T, 0, WALL_T))
     return outer - inner
 
-PIVOT_Z_OFFSET = 0.2                          # raise hinge 0.2 mm above wall top
-HINGE_CASE_H  = CASE_H + PIVOT_Z_OFFSET       # size knuckle to pivot height
+# pivot_z_offset (default 0.2 mm) raises the axis above the wall top
+hinge = PrintInPlaceHinge(case_h=CASE_H, hinge_length=64, knuckle=Knuckle.FULL)
 
-params = HingeParams(case_h=HINGE_CASE_H, hinge_length=64, knuckle=Knuckle.FULL)
-leaf_outer = HINGE_CASE_H * params.knuckle.value / 100 + params.mounting_flat  # = W
-
-cs, ps = make_hinge(params).solids()
-cs = cs.translate((0, 0, HINGE_CASE_H))       # pivot Z = wall top + offset
-ps = ps.translate((0, 0, HINGE_CASE_H))
-
-base = hollow_half(+1, leaf_outer) + cs
-lid  = hollow_half(-1, leaf_outer) + ps
+base = hollow_half(+1, hinge.leaf_width) + hinge.cylinder_side
+lid  = hollow_half(-1, hinge.leaf_width) + hinge.pin_side
 export_stl(Compound([base, lid]), "clamshell.stl")
 ```
 
 Three things easy to get wrong:
 
-- The case back wall sits at **X = W** (= `Ro + mounting_flat`), not at the
-  hinge axis. The wall's inner face attaches to the leaf's outer face there.
+- The case back wall sits at **X = `hinge.leaf_width`** (= `Ro + mounting_flat`),
+  not at the hinge axis. The wall's inner face attaches to the leaf's outer face there.
 - `base + lid` returns a `ShapeList` (one-shot boolean), not a `Compound` of
   two bodies. Wrap with `Compound([base, lid])` to keep them as separate
   print-in-place bodies.
-- Apply the 0.2 mm pivot Z offset to both the `case_h` you pass to
-  `HingeParams` **and** the Z translation. Without the offset, the lid and
-  base wall tops meet on a 0-tolerance plane and any high spot anywhere
-  along the seam springs the front jaw open by ~1 mm. Passing the offset
-  via `case_h` (rather than only translating by it) sizes the knuckle to
-  the pivot height, so the knuckle bottom still lands on the bed when
-  printed flat — important for `Knuckle.FULL`, where the "knuckle rests on
-  bed, no supports" guarantee depends on that. Add corner magnet pockets
+- Pass the real wall height as `case_h` and leave `pivot_z_offset` to do
+  the lift. Without the offset, the lid and base wall tops meet on a
+  0-tolerance plane and any high spot anywhere along the seam springs the
+  front jaw open by ~1 mm. The knuckle is sized to the lifted axis, so at
+  `Knuckle.FULL` it still rests on the bed. Add corner magnet pockets
   if you want a positive latch (see `examples/clamshell.py`).
 
 ## Worked example: long box, 3 hinges
@@ -287,12 +277,11 @@ hinge_len_each = 60
 hinge_y_centres = [-150, 0, 150]
 
 base, lid = base_blank, lid_blank
+hinge = PrintInPlaceHinge(case_h=wall_h, hinge_length=hinge_len_each,
+                          knuckle=Knuckle.FULL)
 for yc in hinge_y_centres:
-    cs, ps = make_hinge(HingeParams(
-        case_h=wall_h, hinge_length=hinge_len_each, knuckle=Knuckle.FULL,
-    )).solids()
-    base = base + cs.translate((0, yc, wall_h))
-    lid  = lid  + ps.translate((0, yc, wall_h))
+    base = base + Pos(0, yc, 0) * hinge.cylinder_side
+    lid  = lid  + Pos(0, yc, 0) * hinge.pin_side
 ```
 
 The case back walls run continuously the full 400 mm; only the hinges are
@@ -315,32 +304,32 @@ segmented.
   also grows. 1–2 mm is usually plenty for fusion.
 - **Reducing mounting_flat below pivot_clearance**: at very small
   `mounting_flat` (< `pivot_clearance`, default 0.6 mm) the leaf strip at
-  X ∈ [Ro+Pc, W] collapses to zero/negative width — the bare `make_hinge()`
-  result then comes back as N/2 + ~N/2 fragmented solids instead of 2.
-  This is fine **as long as you fuse the hinge into a case**: each cs disc
-  tab and each ps fragment shares its outer face with the case wall and
-  fuses with it on boolean union. The case wall plays the role of the
-  vanished leaf strip. `examples/clamshell.py` does this via
-  `_split_hinge_by_side()`, which classifies the fragments by bbox X
-  centre rather than unpacking 2:2.
-- **Forgetting the pivot Z offset**: translating the hinge by exactly
-  `case_h` gives zero design tolerance at the closed seam — any printed
-  high spot then opens the front jaw. Use `case_h + 0.2 mm` as a starting
-  point (0.4 mm closed-case back gap); magnets or finger pressure overcome
-  that easily, and the case stops resting slightly open.
+  X ∈ [Ro+Pc, W] collapses to zero/negative width — the bare hinge
+  then comes back as N/2 + ~N/2 fragmented solids instead of 2.
+  This is fine **as long as you fuse the hinge into a case**: each
+  fragment shares its outer face with the case wall and fuses with it on
+  boolean union. The case wall plays the role of the vanished leaf strip.
+  `hinge.cylinder_side` / `hinge.pin_side` keep the fragments grouped by
+  leaf, so you never need to sort `hinge.solids()` yourself.
+- **Setting pivot_z_offset to 0**: gives zero design tolerance at the
+  closed seam — any printed high spot then opens the front jaw. The 0.2 mm
+  default (0.4 mm closed-case back gap) is a good starting point; magnets
+  or finger pressure overcome that easily, and the case stops resting
+  slightly open.
 
 ## Quick reference
 
 For most clamshell cases:
 
 ```python
-HingeParams(
+PrintInPlaceHinge(
     case_h          = wall_h,            # case wall height
     hinge_length    = back_edge_length,  # total length along the hinge axis
     stations        = 6,                 # default
     knuckle         = Knuckle.FULL,      # or HALF for a more compact knuckle
     mounting_flat   = 0.5,               # mm of flat past the disc for fusion (default)
     pivot_clearance = 0.6,               # default — works on most FDM printers
-    clasp_clearance = 0.4,               # default
+    pivot_z_offset  = 0.2,               # default — axis lift above the wall top
+    clasp_clearance = None,              # default — auto-scales with knuckle size
 )
 ```

@@ -6,18 +6,59 @@ designed for clamshell cases.
 Four inputs:
 
 ```python
-from pip_hinge import HingeParams, Knuckle, make_hinge
+from pip_hinge import Knuckle, PrintInPlaceHinge
 
-hinge = make_hinge(HingeParams(
+hinge = PrintInPlaceHinge(
     case_h        = 10,             # case wall height (mm)
     hinge_length  = 60,             # total hinge length along the axis (mm)
-    stations      = 6,              # alternating cs/ps tab count (even, ≥ 2)
+    stations      = 6,              # alternating tab count (even, ≥ 2)
     knuckle       = Knuckle.FULL,   # FULL = "bump on top", no ramp needed
-))
+)
+base_leaf, lid_leaf = hinge.cylinder_side, hinge.pin_side
 ```
 
-`make_hinge()` returns a 2-body `Compound`: the cylinder-side leaf (with
-bored knuckle tabs) and the pin-side leaf (with the integral pin).
+`PrintInPlaceHinge` is a build123d `Compound` with two labelled children,
+one per leaf:
+
+- **`cylinder_side`** — the leaf whose knuckle tabs carry the bores;
+- **`pin_side`** — the leaf with the end caps and the captured pin.
+
+(Internally these are abbreviated *cs* and *ps*.) Each child is a `Compound`,
+because a bare leaf can be several solids — see `mounting_flat` below.
+
+`make_hinge(HingeParams(...))` builds the same thing from a reusable
+parameter value.
+
+### Where the hinge comes out
+
+The hinge is built flat-open, in print orientation, ready to fuse into a case
+whose walls stand on the bed:
+
+- bed at **Z = 0**, wall top at **Z = `case_h`**;
+- hinge axis along **Y** through X = 0, Z = `case_h + pivot_z_offset`;
+- `cylinder_side` reaches X = +`hinge.leaf_width`, `pin_side` X = −`hinge.leaf_width`
+  — those outer faces are where the two case back walls go;
+- Y spans ±`hinge_length / 2`.
+
+So for a base whose back wall's outer face is at X = x0, place the leaves
+(build123d children are relative to their parent, so move the leaves
+themselves, not the hinge):
+
+```python
+at = Pos(x0 - hinge.leaf_width, y_centre, 0)
+base = base + at * hinge.cylinder_side
+lid = lid + at * hinge.pin_side
+```
+
+### Joints
+
+`cylinder_side.joints["pivot"]` is a `RevoluteJoint` on the hinge axis and
+`pin_side.joints["pivot"]` a matching `RigidJoint`, so the hinge can be swung
+in an assembly view (0° = flat-open as printed, 180° = closed):
+
+```python
+hinge.cylinder_side.joints["pivot"].connect_to(hinge.pin_side.joints["pivot"], angle=180)
+```
 
 ## In context: a flat-open clamshell with HALF knuckle
 
@@ -34,7 +75,7 @@ variant (no magnets) for reference.
 ![parameters guide](docs/diagrams/parameters_guide.png)
 
 Cross-section (Panel A) shows the spatial parameters: `case_h` (wall
-height), `PIVOT_Z_OFFSET` (extra lift), `mounting_flat` (flat past the
+height), `pivot_z_offset` (extra lift), `mounting_flat` (flat past the
 disc edge), plus the derived `Po`/`Ro`/`T`/`W` and the pin/bore inset.
 Top view (Panel B) shows `hinge_length`, `stations`, derived
 `clasp_width`, and `clasp_clearance` between meshing tabs.
@@ -88,12 +129,11 @@ environment rather than adding it to a project.
 Then in your build123d code:
 
 ```python
-from pip_hinge import HingeParams, Knuckle, make_hinge
+from pip_hinge import Knuckle, PrintInPlaceHinge
 
-hinge = make_hinge(HingeParams(
-    case_h=10, hinge_length=60, knuckle=Knuckle.FULL,
-))
-cylinder_side, pin_side = hinge.solids()    # or use _split_hinge_by_side helper
+hinge = PrintInPlaceHinge(case_h=10, hinge_length=60, knuckle=Knuckle.FULL)
+base = my_base + hinge.cylinder_side
+lid = my_lid + hinge.pin_side
 ```
 
 Or to play with it locally:
@@ -113,16 +153,17 @@ The four primary inputs:
 | -------------- | -------------- | -------------------------------------------------------- |
 | `case_h`       | (required)     | Case wall height; the hinge's "scale" reference          |
 | `hinge_length` | (required)     | Total hinge length along the axis (Y)                    |
-| `stations`     | 6              | Number of alternating cs/ps tabs (even, ≥ 2)             |
+| `stations`     | 6              | Number of alternating cylinder-side / pin-side tabs (even, ≥ 2) |
 | `knuckle`      | `Knuckle.FULL` | `FULL`, `HALF`, or `SMALL` — see the option table below |
 
-Three small tuneables:
+Four small tuneables:
 
 | Parameter         | Default | Meaning                                            |
 | ----------------- | ------- | -------------------------------------------------- |
 | `mounting_flat`   | 0.5     | Flat width past the disc edge for case-wall fusion. Below `pivot_clearance` (= 0.6 mm) the bare hinge fragments into multiple solids — fine when fused into a case, see docs |
 | `pivot_clearance` | 0.6     | Radial pin/bore gap (FDM tolerance)                |
-| `clasp_clearance` | `None`  | Axial gap between cs and ps tabs. `None` auto-scales with knuckle diameter `Po`: 0.2 mm at Po ≤ 5 mm (matches r0berts' original), linear up to 0.4 mm at Po ≥ 10 mm. Pass an explicit value to override |
+| `pivot_z_offset`  | 0.2     | Lift of the hinge axis above the wall top. When closed, the lid then rests `2 × pivot_z_offset` above the base instead of meeting it on a zero-tolerance plane, so a high spot along the seam can't spring the front of the case open. Only the knuckle is raised — the leaves stay flush with the wall top. `0` disables it; must be less than the knuckle radius |
+| `clasp_clearance` | `None`  | Axial gap between meshing tabs. `None` auto-scales with knuckle diameter `Po`: 0.2 mm at Po ≤ 5 mm (matches r0berts' original), linear up to 0.4 mm at Po ≥ 10 mm. Pass an explicit value to override |
 
 Plus three pin-engagement constants from the original FreeCAD source
 (`pin_cyl_extra`, `pin_end_offset`, `pin_short_cyl_factor`) — leave at
@@ -130,9 +171,10 @@ defaults unless deliberately tuning the pin/bore feel.
 
 ## Validation
 
-`make_hinge()` raises `ValueError` for hard geometric problems:
+`PrintInPlaceHinge` / `make_hinge()` raise `ValueError` for hard geometric problems:
 - non-positive `case_h`, `hinge_length`, or `mounting_flat`
 - `stations < 2` or odd
+- negative `pivot_z_offset`, or one not smaller than the knuckle radius
 - bore Ø ≤ `pivot_clearance` (knuckle too small for the pivot clearance)
 
 And warns (`warnings.warn`) when:
