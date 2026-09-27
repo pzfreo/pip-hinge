@@ -60,6 +60,18 @@ in an assembly view (0° = flat-open as printed, 180° = closed):
 hinge.cylinder_side.joints["pivot"].connect_to(hinge.pin_side.joints["pivot"], angle=180)
 ```
 
+Each leaf also has a `"mount"` `RigidJoint` at the bottom centre of its outer
+face (X = ±`leaf_width`, Y = 0, Z = 0), axes aligned with the hinge frame. To
+attach the hinge to a case wall with joints instead of `Pos`:
+
+```python
+RigidJoint("hinge", base, Location((x0, y_centre, 0)))    # back-wall outer face, bottom centre
+base.joints["hinge"].connect_to(hinge.cylinder_side.joints["mount"])
+hinge.cylinder_side.joints["pivot"].connect_to(hinge.pin_side.joints["pivot"], angle=0)
+base = base + hinge.cylinder_side                         # leaves are now in place
+lid = lid + hinge.pin_side
+```
+
 ## In context: a flat-open clamshell with HALF knuckle
 
 ![clamshell with HALF knuckle and corner magnet pockets, flat-open print orientation](docs/diagrams/clamshell_half_preview.png)

@@ -453,12 +453,15 @@ class PrintInPlaceHinge(Compound):
         params (HingeParams): the parameters the hinge was built from.
         cylinder_side (Compound): leaf with the bored knuckle tabs
             (label ``"cylinder_side"``). Joints: ``"pivot"``, a RevoluteJoint
-            on the hinge axis.
+            on the hinge axis; ``"mount"``, a RigidJoint at the bottom centre
+            of its outer face (X = +leaf_width, Y = 0, Z = 0), axes aligned
+            with the hinge frame.
         pin_side (Compound): leaf with the end caps and the captured pin
             (label ``"pin_side"``). Joints: ``"pivot"``, a RigidJoint on the
             hinge axis; ``cylinder_side.joints["pivot"].connect_to(
             pin_side.joints["pivot"], angle=a)`` swings it, 0 = flat-open,
-            180 = closed.
+            180 = closed. ``"mount"``, as for cylinder_side but at
+            X = −leaf_width.
         leaf_width (float): X distance from the axis to each leaf's outer face.
         axis_z (float): height of the hinge axis above the bed.
 
@@ -505,6 +508,10 @@ class PrintInPlaceHinge(Compound):
         pivot = Axis((0, 0, self.axis_z), (0, 1, 0))
         RevoluteJoint("pivot", cylinder_side, axis=pivot)
         RigidJoint("pivot", pin_side, pivot.location)
+        # Mounting points: bottom centre of each leaf's outer face, axes
+        # aligned with the hinge frame.
+        RigidJoint("mount", cylinder_side, Location((self.leaf_width, 0, 0)))
+        RigidJoint("mount", pin_side, Location((-self.leaf_width, 0, 0)))
         super().__init__(label="PrintInPlaceHinge", children=[cylinder_side, pin_side])
 
     @property

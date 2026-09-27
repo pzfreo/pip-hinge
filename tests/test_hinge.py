@@ -293,3 +293,27 @@ def test_pivot_z_offset_must_be_below_knuckle_radius():
     with pytest.raises(ValueError, match="pivot_z_offset"):
         PrintInPlaceHinge(case_h=10, hinge_length=60, knuckle=Knuckle.SMALL,
                           pivot_z_offset=4.0)   # Ro = 3.5
+
+
+def test_mount_joint_places_leaves_on_a_wall():
+    """A wall joint connected to cylinder_side's "mount" puts that leaf's
+    outer face on it; the pivot joint at 0 then brings pin_side along, and
+    the placed leaves fuse into the case where the joint put them."""
+    from build123d import Align, Location, RigidJoint
+    h = PrintInPlaceHinge(case_h=10, hinge_length=60, knuckle=Knuckle.HALF,
+                          mounting_flat=1.0)
+    wall = Box(20, 80, 10, align=(Align.MIN, Align.CENTER, Align.MIN))
+    wall = Pos(50, 20, 0) * wall                 # back face at X = 50, centred Y = 20
+    RigidJoint("hinge", wall, Location((50, 20, 0)))  # global: back face, bottom centre
+    wall.joints["hinge"].connect_to(h.cylinder_side.joints["mount"])
+    cs = h.cylinder_side.bounding_box()
+    assert cs.max.X == pytest.approx(50)
+    assert cs.center().Y == pytest.approx(20)
+    assert cs.min.Z == pytest.approx(0, abs=1e-6)
+    h.cylinder_side.joints["pivot"].connect_to(h.pin_side.joints["pivot"], angle=0)
+    ps = h.pin_side.bounding_box()
+    assert ps.min.X == pytest.approx(50 - 2 * h.leaf_width)
+    assert ps.min.Z == pytest.approx(0, abs=1e-6)
+    fused = wall + h.cylinder_side
+    assert len(fused.solids()) == 1
+    assert fused.bounding_box().min.X == pytest.approx(cs.min.X)   # leaf fused where placed
