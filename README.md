@@ -98,9 +98,14 @@ Top view (Panel B) shows `hinge_length`, `stations`, derived
 
 | `knuckle`      | knuckle diameter            | ramp                  | gap between case walls (flat-open) |
 | -------------- | --------------------------- | --------------------- | ---------------------------------- |
-| `Knuckle.FULL` | `2 × case_h`                | none — rests on bed   | `2 × (case_h + mounting_flat)`     |
-| `Knuckle.HALF` | `case_h`                    | 45° self-supporting teardrop | `case_h + 2 × mounting_flat`       |
-| `Knuckle.SMALL`| `max(case_h / 2, 5 mm)`     | ~25° from vertical (smaller knuckle → naturally steeper) | `max(case_h, 10mm) + 2 × mounting_flat` |
+| `Knuckle.FULL` | `2 × (case_h + pivot_z_offset)`          | none — rests on bed   | `2 × (case_h + pivot_z_offset) + 2 × mounting_flat` |
+| `Knuckle.HALF` | `case_h + pivot_z_offset`                | 45° self-supporting teardrop | `case_h + pivot_z_offset + 2 × mounting_flat` |
+| `Knuckle.SMALL`| `max((case_h + pivot_z_offset) / 2, 5 mm)` | ~25° from vertical (smaller knuckle → naturally steeper) | `max((case_h + pivot_z_offset) / 2, 5 mm) + 2 × mounting_flat` |
+
+The knuckle diameter `Po` is sized to the lifted axis height
+`case_h + pivot_z_offset`, and the flat-open gap between the case walls is
+always `Po + 2 × mounting_flat` (= `2 × hinge.leaf_width`). For `case_h = 10`
+with the defaults that is 21.4 mm (FULL), 11.2 mm (HALF) and 6.1 mm (SMALL).
 
 See [docs/clamshell-integration.md](docs/clamshell-integration.md) for
 mounting, orientation, multi-hinge layouts, and the closed-vs-open view.

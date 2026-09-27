@@ -38,7 +38,11 @@ tabs).
 
 Both panels above use `case_h = 10mm`, `mounting_flat = 0.5mm` (the default).
 
-### Knuckle.FULL  (Po = 2 × case_h)
+The knuckle is sized to the lifted axis height `case_h + pivot_z_offset`
+(0.2 mm by default), and in every mode the flat-open gap between the case
+walls is `Po + 2 × mounting_flat` (= `2 × hinge.leaf_width`).
+
+### Knuckle.FULL  (Po = 2 × (case_h + pivot_z_offset))
 
 The original print-in-place design. The knuckle diameter equals the full
 closed-case height (lid + base stacked). When flat-open for printing, the
@@ -47,11 +51,11 @@ When closed, the back of the case shows a clean half-D bulge of full
 case height.
 
 Geometric properties:
-- Knuckle protrudes `case_h` *above* the wall top (the "bump on top").
-- Gap between case walls when flat-open: `2 × case_h + 2 × mounting_flat`.
+- Knuckle protrudes `case_h + 2 × pivot_z_offset` *above* the wall top (the "bump on top").
+- Gap between case walls when flat-open: `2 × (case_h + pivot_z_offset) + 2 × mounting_flat`.
 - Leaf paddle bottom is on the bed; the leaf is a tall rectangle.
 
-### Knuckle.HALF  (Po = case_h)
+### Knuckle.HALF  (Po = case_h + pivot_z_offset)
 
 A more compact knuckle, diameter equal to a single wall's height. Sits
 mostly above the wall top, with the lower half overhanging into the gap.
@@ -59,11 +63,11 @@ A 45°-or-shallower ramp on each leaf supports the knuckle from below as
 the print rises — the two leaves' ramps converge at the knuckle bottom.
 
 Geometric properties:
-- Knuckle protrudes `case_h / 2` above the wall.
-- Gap between case walls when flat-open: `case_h + 2 × mounting_flat`.
+- Knuckle protrudes `(case_h + pivot_z_offset) / 2 + pivot_z_offset` above the wall.
+- Gap between case walls when flat-open: `case_h + pivot_z_offset + 2 × mounting_flat`.
 - Leaf has a sloped lower-inner face (the ramp).
 
-### Knuckle.SMALL  (Po = max(case_h / 2, 5 mm))
+### Knuckle.SMALL  (Po = max((case_h + pivot_z_offset) / 2, 5 mm))
 
 The smallest knuckle the geometry will produce: 1/4 of FULL with a 5 mm
 absolute floor that keeps the bore + pin big enough to print reliably on
@@ -71,7 +75,8 @@ a 0.4 mm-nozzle FDM regardless of case height. For `case_h ≥ 10 mm` the
 1/4-of-FULL ratio dominates; below that, the 5 mm floor kicks in.
 
 Geometric properties:
-- Knuckle protrudes `Po / 2` above the wall.
+- Knuckle protrudes `Po / 2 + pivot_z_offset` above the wall.
+- Gap between case walls when flat-open: `max((case_h + pivot_z_offset) / 2, 5 mm) + 2 × mounting_flat`.
 - Ramp **steeper** than HALF's at the same `mounting_flat`. Counterintuitive
   but true: a smaller knuckle puts the disc bottom higher above the bed,
   so the leaf's ramp (from outer-bottom corner to disc bottom) rises more
@@ -83,7 +88,7 @@ Geometric properties:
 - Auto-`clasp_clearance` scales with knuckle diameter Po: 0.2 mm at
   Po = 5 mm (matches r0berts' original tight value), linear up to
   0.4 mm at Po ≥ 10 mm. SMALL at the typical `case_h = 10 mm` lands
-  at 0.2 mm; a larger SMALL (e.g. case_h = 20 → Po = 10) auto-relaxes
+  at 0.2 mm; a larger SMALL (e.g. case_h = 20 → Po = 10.1) auto-relaxes
   to 0.4. Pass an explicit `clasp_clearance` to override.
 
 ## Closed vs flat-open
@@ -191,7 +196,7 @@ walls extending up, hinge axis at the top of the back walls.
   `Po = 2 × (case_h + pivot_z_offset)` and the axis is at
   `Z = case_h + pivot_z_offset`). No ramp, no
   in-air bridging. Prints cleanly regardless of knuckle size.
-- **Knuckle.HALF**: knuckle bottom hovers at `Z = case_h / 2`. The 45°
+- **Knuckle.HALF**: knuckle bottom hovers at `Z = (case_h + pivot_z_offset) / 2`. The 45°
   ramps on each leaf converge at the knuckle bottom, supporting it from
   below. Prints supportless at any case size, but you need to choose
   `mounting_flat` small enough that the ramp angle stays ≤ 45°.
@@ -290,8 +295,8 @@ segmented.
 ## Common gotchas
 
 - **Wrong case_h**: `case_h` is the *wall height* of one case half, not the
-  combined closed-case height. At FULL the knuckle works out to `2 × case_h`
-  in diameter — twice the wall.
+  combined closed-case height. At FULL the knuckle works out to
+  `2 × (case_h + pivot_z_offset)` in diameter — about twice the wall.
 - **Too many stations**: doubling stations halves `clasp_width`. Below ~3 mm
   clasps print poorly on FDM (a warning fires). For long hinges, keep
   stations at 6–10 and scale `hinge_length` instead.
