@@ -49,7 +49,7 @@ def build_case(size: CaseSize) -> Compound:
         case_h=size.wall_height,
         hinge_length=size.hinge_length,
         stations=size.stations,
-        knuckle=Knuckle.HALF,
+        knuckle=Knuckle.SMALL,
         pin_style=PinStyle.CONICAL,
     )
     base = case_half(size, +1, hinge.leaf_width) + hinge.cylinder_side

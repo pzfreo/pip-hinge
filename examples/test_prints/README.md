@@ -2,15 +2,17 @@
 
 The [combined STL](conical_clamshell_pair.stl) contains two flat-open,
 print-in-place clamshells, side by side with a 6 mm gap. Both use explicit
-`PinStyle.CONICAL`, `Knuckle.HALF`, and the library's default 0.3 mm axial
+`PinStyle.CONICAL`, `Knuckle.SMALL`, and the library's default 0.3 mm axial
 tab gap and 0.3 mm radial pin-to-bore gap.
+The small knuckle is 5.0 mm in diameter on the smaller case and 5.1 mm on
+the larger case.
 
 | Case | Half footprint | Wall height | Hinge length | Stations | Flat-open footprint |
 | --- | --- | ---: | ---: | ---: | --- |
-| [Small](conical_clamshell_small.stl) | 35 × 28 mm | 6 mm | 24 mm | 4 | 63.2 × 35 mm |
-| [Large](conical_clamshell_large.stl) | 60 × 42 mm | 10 mm | 48 mm | 6 | 95.2 × 60 mm |
+| [Small](conical_clamshell_small.stl) | 35 × 28 mm | 6 mm | 24 mm | 4 | 62.0 × 35 mm |
+| [Large](conical_clamshell_large.stl) | 60 × 42 mm | 10 mm | 48 mm | 6 | 90.1 × 60 mm |
 
-The combined footprint is about **164.4 × 60 mm** before any brim. Import
+The combined footprint is about **158.1 × 60 mm** before any brim. Import
 the combined STL once, keep its open sides facing up and its flat bottoms on
 the bed, and print without generated supports. Start at 0.2 mm layers with a
 0.4 mm nozzle, and leave the slicer scale at 100%. Start without a brim; if
