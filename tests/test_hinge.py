@@ -30,7 +30,7 @@ from OCP.BRepExtrema import BRepExtrema_DistShapeShape
 
 from build123d import Box, Pos
 
-from pip_hinge import HingeParams, Knuckle, PinStyle, PrintInPlaceHinge, make_hinge
+from pip_hinge import FitProfile, HingeParams, Knuckle, PinStyle, PrintInPlaceHinge, make_hinge
 
 # (knuckle, case_h) covering each underside strategy and a span of disc sizes.
 CASES = [
@@ -310,6 +310,47 @@ def test_clearance_inputs_reject_colliding_geometry():
     with pytest.raises(ValueError, match="clasp_clearance"):
         HingeParams(case_h=10, hinge_length=20, stations=4,
                     clasp_clearance=5)._resolve()
+
+
+@pytest.mark.parametrize(
+    "case_h,hinge_length,stations,expected_axial",
+    [(6, 24, 4, 0.2), (10, 48, 6, 0.3)],
+)
+def test_tight_fit_matches_printed_small_conical_cases(
+    case_h, hinge_length, stations, expected_axial
+):
+    common = dict(case_h=case_h, hinge_length=hinge_length,
+                  stations=stations, knuckle=Knuckle.SMALL,
+                  pin_style=PinStyle.CONICAL)
+    standard = HingeParams(**common)._resolve()
+    tight = HingeParams(**common, fit_profile=FitProfile.TIGHT)._resolve()
+    assert (standard["Pc"], standard["Cc"]) == pytest.approx((0.6, 0.3))
+    assert (tight["Pc"], tight["Cc"]) == pytest.approx((0.4, expected_axial))
+
+    h = PrintInPlaceHinge(**common, fit_profile=FitProfile.TIGHT,
+                          mounting_flat=1.0)
+    assert h.is_valid and len(h.solids()) == 2
+    dss = BRepExtrema_DistShapeShape(
+        h.cylinder_side.solids()[0].wrapped, h.pin_side.solids()[0].wrapped)
+    dss.Perform()
+    assert dss.Value() == pytest.approx(0.2, abs=0.01)
+
+
+def test_tight_fit_is_narrow_and_explicit_clearances_override_it():
+    common = dict(case_h=6, hinge_length=24, stations=4,
+                  knuckle=Knuckle.SMALL, fit_profile=FitProfile.TIGHT)
+    for changes in (
+        dict(pin_style=PinStyle.ROUNDED),
+        dict(knuckle=Knuckle.HALF),
+        dict(case_h=14),  # SMALL barrel diameter exceeds the tested range.
+    ):
+        p = HingeParams(**(common | changes))._resolve()
+        assert (p["Pc"], p["Cc"]) == pytest.approx((0.6, 0.3))
+    explicit = HingeParams(**common, pivot_clearance=0.6,
+                           clasp_clearance=0.3)._resolve()
+    assert (explicit["Pc"], explicit["Cc"]) == pytest.approx((0.6, 0.3))
+    with pytest.raises(ValueError, match="fit_profile"):
+        HingeParams(**(common | {"fit_profile": "tight"}))._resolve()
 
 
 def test_conical_pin_uses_more_of_knuckle_without_losing_wall_or_clearance():

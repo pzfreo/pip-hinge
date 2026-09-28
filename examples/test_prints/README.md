@@ -9,9 +9,9 @@ the larger case.
 
 Both cases have now been physically printed: the hinges released and worked,
 but their rocking play was more than expected. The small case also slid along
-the hinge axis. A [tighter fit trial](tighter_fit/README.md) reduces the radial
-pin gap on both cases and the axial tab gap on the small case. Keep this
-original plate as the known-working fit for comparison.
+the hinge axis. A [tighter fit trial](tighter_fit/README.md) subsequently
+printed well: it reduces the radial pin gap on both cases and the axial tab
+gap on the small case. Keep this original plate as the baseline for comparison.
 
 | Case | Half footprint | Wall height | Hinge length | Stations | Flat-open footprint |
 | --- | --- | ---: | ---: | ---: | --- |

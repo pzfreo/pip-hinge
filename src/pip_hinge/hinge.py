@@ -69,6 +69,18 @@ class PinStyle(Enum):
     BRIDGED = "bridged"
 
 
+class FitProfile(Enum):
+    """Clearance defaults for a printer-tested subset of hinge sizes.
+
+    TIGHT narrows conical pins on approximately 5 mm SMALL knuckles. It also
+    narrows the axial tab gap when the station pitch is at most 6 mm.
+    Explicit pivot_clearance and clasp_clearance values always take priority.
+    """
+
+    STANDARD = "standard"
+    TIGHT = "tight"
+
+
 @dataclass(frozen=True)
 class HingeParams:
     """Parameters for :class:`PrintInPlaceHinge`, as a reusable value.
@@ -90,12 +102,16 @@ class HingeParams:
             thicker wall so the tips fit within hinge_length.
         mounting_flat (float): width in mm of the flat attachment strip beyond
             each knuckle's outer edge, toward the case wall.
-        pivot_clearance (float): difference in mm between bore and pin
-            diameters; the radial gap on each side is half this value.
+        pivot_clearance (float | None): difference in mm between bore and pin
+            diameters; the radial gap on each side is half this value. None
+            selects the fit profile's default.
         pivot_z_offset (float): height in mm of the rotation axis above the
             case wall top. The closed seam gap is twice this value.
         clasp_clearance (float | None): gap in mm along Y between adjacent
-            cylinder-side and pin-side tabs. None uses a 0.3 mm gap.
+            cylinder-side and pin-side tabs. None selects the fit profile's
+            default.
+        fit_profile (FitProfile): STANDARD retains the original clearances;
+            TIGHT applies the tested small-conical-knuckle heuristic.
         pin_cyl_extra (float): amount in mm added to one station width to
             set each middle pin's straight shank length. Its protrusion
             beyond each neighbouring tab face is half this plus half the
@@ -111,7 +127,7 @@ class HingeParams:
     stations: int = 6
     knuckle: Knuckle = Knuckle.FULL
     mounting_flat: float = 0.5
-    pivot_clearance: float = 0.6
+    pivot_clearance: Optional[float] = None
     pivot_z_offset: float = 0.2
     clasp_clearance: Optional[float] = None
     pin_cyl_extra: float = 1.5
@@ -119,6 +135,7 @@ class HingeParams:
     pin_short_cyl_factor: float = 1 / 3
     pin_style: PinStyle = PinStyle.CONICAL
     knuckle_wall: Optional[float] = None
+    fit_profile: FitProfile = FitProfile.STANDARD
 
     def _resolve(self) -> dict:
         if self.case_h <= 0:
@@ -135,6 +152,8 @@ class HingeParams:
             raise ValueError(f"knuckle must be a Knuckle (got {self.knuckle!r})")
         if not isinstance(self.pin_style, PinStyle):
             raise ValueError(f"pin_style must be a PinStyle (got {self.pin_style!r})")
+        if not isinstance(self.fit_profile, FitProfile):
+            raise ValueError(f"fit_profile must be a FitProfile (got {self.fit_profile!r})")
         if self.mounting_flat <= 0:
             # W == Ro at 0 gives a degenerate leaf profile that OCC rejects with a
             # cryptic StdFail_NotDone; fail early with a clear message instead.
@@ -163,8 +182,17 @@ class HingeParams:
                 f"({Ro:.2f})"
             )
         Cw = self.hinge_length / self.stations
-        # This is an FDM fit gap along Y, independent of knuckle diameter.
-        Cc = 0.3 if self.clasp_clearance is None else self.clasp_clearance
+        # The TIGHT rules cover only the printed conical SMALL barrels near
+        # 5 mm diameter. The two successful test cases had pitches 6 and 8 mm;
+        # only the 6 mm case needed less axial play.
+        tight_small = (self.fit_profile is FitProfile.TIGHT
+                       and self.pin_style is PinStyle.CONICAL
+                       and self.knuckle is Knuckle.SMALL
+                       and Po <= 5.5)
+        Pc = ((0.4 if tight_small else 0.6)
+              if self.pivot_clearance is None else self.pivot_clearance)
+        Cc = ((0.2 if tight_small and Cw <= 6 else 0.3)
+              if self.clasp_clearance is None else self.clasp_clearance)
         if Cc <= 0 or Cc >= Cw:
             raise ValueError(
                 f"clasp_clearance must be > 0 and < station width {Cw:.2f} "
@@ -214,7 +242,7 @@ class HingeParams:
             # retaining at least 1 mm of material around the bore.
             # Short hinges may need a thicker wall to keep the tips in bounds.
             wall = (max(1.0, 0.1 * Ro,
-                        Ro - max_tip_radius - self.pivot_clearance / 2)
+                        Ro - max_tip_radius - Pc / 2)
                     if self.pin_style is PinStyle.CONICAL else Ro / 2)
         else:
             wall = self.knuckle_wall
@@ -224,13 +252,13 @@ class HingeParams:
                 f"(got {wall})"
             )
         Pi = 2 * (Ro - wall)                       # bore diameter
-        if self.pivot_clearance <= 0 or Pi <= self.pivot_clearance:
+        if Pc <= 0 or Pi <= Pc:
             raise ValueError(
                 f"pivot_clearance must be > 0 and smaller than bore Ø "
-                f"({Pi:.2f}); got {self.pivot_clearance}"
+                f"({Pi:.2f}); got {Pc}"
             )
         if (max_tip_radius is not None
-                and Pi / 2 - self.pivot_clearance / 2 > max_tip_radius + 1e-9):
+                and Pi / 2 - Pc / 2 > max_tip_radius + 1e-9):
             raise ValueError(
                 "pin tips extend beyond hinge_length; increase hinge_length "
                 "or knuckle_wall, or reduce pin_cyl_extra"
@@ -244,7 +272,7 @@ class HingeParams:
             "T": Ro,                                 # T = Ro by construction
             "Pi": Pi,
             "knuckle_wall": wall,
-            "Pc": self.pivot_clearance,
+            "Pc": Pc,
             "W": Ro + self.mounting_flat,
             "Cw": Cw,
             "Cc": Cc,
@@ -547,16 +575,21 @@ class PrintInPlaceHinge(Compound):
             stated length. Reduce only if your printer can make a thinner wall.
         mounting_flat (float): width in mm of the flat leaf strip beyond the
             knuckle edge where the case wall attaches. At or below
-            ``pivot_clearance`` the bare leaf may have separate solids; fusing
+            the resolved ``pivot_clearance`` the bare leaf may have separate solids; fusing
             it to the case wall joins them.
-        pivot_clearance (float): difference in mm between the bore and pin
-            diameters. The radial gap between their surfaces is half this.
+        pivot_clearance (float | None): difference in mm between the bore and
+            pin diameters. The radial gap between their surfaces is half this.
+            None selects the fit profile's default.
         pivot_z_offset (float): height in mm of the axis above the case wall
             top. This leaves a closed seam gap twice as large; the leaf tops
             remain flush with the wall top. Zero removes the offset.
         clasp_clearance (float | None): gap in mm along Y between adjacent
-            cylinder-side and pin-side tabs. None uses 0.3 mm, independent
-            of knuckle size. An explicit value overrides it.
+            cylinder-side and pin-side tabs. None selects the fit profile's
+            default. An explicit value overrides it.
+        fit_profile (FitProfile): STANDARD uses 0.3 mm radial and axial gaps.
+            TIGHT uses 0.2 mm radial gap on conical SMALL knuckles up to 5.5 mm
+            diameter, and 0.2 mm axial gap when their station pitch is at most
+            6 mm. Other sizes retain STANDARD gaps.
         pin_cyl_extra (float): amount in mm added to one station width to
             determine each middle pin's straight shank length. The shank
             protrudes ``(pin_cyl_extra + clasp_clearance) / 2`` beyond each
@@ -596,7 +629,7 @@ class PrintInPlaceHinge(Compound):
         stations: int = 6,
         knuckle: Knuckle = Knuckle.FULL,
         mounting_flat: float = 0.5,
-        pivot_clearance: float = 0.6,
+        pivot_clearance: Optional[float] = None,
         pivot_z_offset: float = 0.2,
         clasp_clearance: Optional[float] = None,
         pin_cyl_extra: float = 1.5,
@@ -604,6 +637,7 @@ class PrintInPlaceHinge(Compound):
         pin_short_cyl_factor: float = 1 / 3,
         pin_style: PinStyle = PinStyle.CONICAL,
         knuckle_wall: Optional[float] = None,
+        fit_profile: FitProfile = FitProfile.STANDARD,
     ):
         self.params = HingeParams(
             case_h=case_h,
@@ -612,6 +646,7 @@ class PrintInPlaceHinge(Compound):
             knuckle=knuckle,
             pin_style=pin_style,
             knuckle_wall=knuckle_wall,
+            fit_profile=fit_profile,
             mounting_flat=mounting_flat,
             pivot_clearance=pivot_clearance,
             pivot_z_offset=pivot_z_offset,

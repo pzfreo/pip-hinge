@@ -185,10 +185,41 @@ Fit and pin options:
 | ----------------- | ------- | -------------------------------------------------- |
 | `pin_style`       | `PinStyle.CONICAL` | `CONICAL`: 45° tapered pin tips; `ROUNDED`: original hemispherical tips; `BRIDGED`: one continuous cylindrical pin through every bored tab. BRIDGED is experimental; test it on your printer before using it in a case |
 | `knuckle_wall`    | `None`  | Material thickness around the pin bore. `None` gives conical pins at least 1.0 mm of modeled wall, expanding the pin toward the knuckle radius; short hinges use a thicker wall to keep the tips inside the hinge length. Rounded and bridged pins retain the original half-radius wall. Check the actual perimeter count in your slicer; set a value in mm to override |
-| `mounting_flat`   | 0.5     | Width in mm of the flat leaf strip beyond the knuckle where the case wall joins. At or below `pivot_clearance` the bare leaf can contain separate solids that join when fused to the wall |
-| `pivot_clearance` | 0.6     | Difference in mm between bore and pin diameters. The radial gap is half this value: 0.3 mm by default |
+| `mounting_flat`   | 0.5     | Width in mm of the flat leaf strip beyond the knuckle where the case wall joins. At or below the resolved `pivot_clearance` the bare leaf can contain separate solids that join when fused to the wall |
+| `pivot_clearance` | `None`  | Difference in mm between bore and pin diameters. `None` selects the fit profile's value: 0.6 mm with STANDARD, or 0.4 mm for tested small conical hinges with TIGHT. The radial gap is half this value |
 | `pivot_z_offset`  | 0.2     | Lift of the hinge axis above the wall top. When closed, the lid then rests `2 × pivot_z_offset` above the base instead of meeting it on a zero-tolerance plane, so a high spot along the seam can't spring the front of the case open. Only the knuckle is raised — the leaves stay flush with the wall top. `0` disables it; must be less than the knuckle radius |
-| `clasp_clearance` | `None`  | Gap in mm along Y between the facing ends of neighbouring cylinder-side and pin-side tabs. `None` uses 0.3 mm at every knuckle size; an explicit value overrides it |
+| `clasp_clearance` | `None`  | Gap in mm along Y between neighbouring tab faces. `None` selects the fit profile's value; an explicit value overrides it |
+| `fit_profile` | `FitProfile.STANDARD` | `STANDARD` retains 0.3 mm radial and axial gaps. `TIGHT` applies the narrow, print-tested rule below |
+
+### Tighter fit for small conical hinges
+
+The [two-size conical test plate](examples/test_prints/README.md) printed and
+released with the standard 0.3 mm gaps, but both lids rocked around the pin
+and the smaller case also slid along the hinge axis. The
+[tighter trial](examples/test_prints/tighter_fit/README.md) printed well on that
+printer. Select it with:
+
+```python
+from pip_hinge import FitProfile, Knuckle, PrintInPlaceHinge
+
+hinge = PrintInPlaceHinge(
+    case_h=6, hinge_length=24, stations=4, knuckle=Knuckle.SMALL,
+    fit_profile=FitProfile.TIGHT,
+)
+```
+
+| Profile and geometry | Radial pin gap | Axial tab gap |
+| --- | ---: | ---: |
+| `STANDARD` (all hinges) | 0.3 mm | 0.3 mm |
+| `TIGHT`: conical `SMALL`, barrel diameter ≤ 5.5 mm, station pitch ≤ 6 mm | 0.2 mm | 0.2 mm |
+| `TIGHT`: conical `SMALL`, barrel diameter ≤ 5.5 mm, station pitch > 6 mm | 0.2 mm | 0.3 mm |
+| `TIGHT`: other geometry | 0.3 mm | 0.3 mm |
+
+Station pitch is `hinge_length / stations`. The radial gap is half of
+`pivot_clearance`, so 0.2 mm radial means `pivot_clearance=0.4`. Passing
+`pivot_clearance` or `clasp_clearance` explicitly overrides that part of the
+profile. Fit still depends on the printer, material, and slicer settings;
+try a small test print before committing to a large case.
 
 ![Cutaway of a continuous bridged pin](docs/diagrams/bridged_pin.svg)
 
