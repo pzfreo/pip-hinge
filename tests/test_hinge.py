@@ -354,11 +354,11 @@ def test_tight_fit_is_narrow_and_explicit_clearances_override_it():
 
 
 def test_conical_pin_uses_more_of_knuckle_without_losing_wall_or_clearance():
-    """The larger conical pin in #20 retains at least 1 mm of modeled bore wall and
-    the same pin/bore fit; the rounded and bridged options retain old sizing."""
-    conical = HingeParams(case_h=10, hinge_length=60,
+    """With enough station pitch, conical tips can use more of the barrel
+    while retaining at least 1 mm of modeled wall and the same pin/bore fit."""
+    conical = HingeParams(case_h=10, hinge_length=120,
                           pin_style=PinStyle.CONICAL)._resolve()
-    rounded = HingeParams(case_h=10, hinge_length=60,
+    rounded = HingeParams(case_h=10, hinge_length=120,
                           pin_style=PinStyle.ROUNDED)._resolve()
     assert conical["knuckle_wall"] >= 1.0
     assert conical["Pi"] > rounded["Pi"]
@@ -366,6 +366,29 @@ def test_conical_pin_uses_more_of_knuckle_without_losing_wall_or_clearance():
     small = HingeParams(case_h=10, hinge_length=60,
                         knuckle=Knuckle.SMALL)._resolve()
     assert conical["Cc"] == rounded["Cc"] == small["Cc"] == pytest.approx(0.3)
+
+
+@pytest.mark.parametrize("hinge_length,stations", [(20, 2), (20, 4), (60, 6)])
+def test_conical_tips_remain_separate_on_short_full_hinges(hinge_length, stations):
+    """Large pin radii once joined adjacent cones through the bored tabs,
+    creating an unsupported span in the default print strategy."""
+    h = PrintInPlaceHinge(case_h=10, hinge_length=hinge_length,
+                          stations=stations, knuckle=Knuckle.FULL,
+                          mounting_flat=1.0)
+    assert h.is_valid and len(h.solids()) == 2
+    probe = Pos(0, 0, h.axis_z) * Box(0.01, hinge_length + 2, 0.01)
+    pin_sections = sorted((s.bounding_box().min.Y, s.bounding_box().max.Y)
+                          for s in (h.pin_side & probe).solids())
+    assert len(pin_sections) == stations // 2 + 1
+    for left, right in zip(pin_sections, pin_sections[1:]):
+        assert right[0] - left[1] >= h.params._resolve()["Cc"] - 0.02
+
+
+def test_rounded_warns_when_legacy_tips_join():
+    with pytest.warns(UserWarning, match="rounded pin tips meet"):
+        HingeParams(case_h=10, hinge_length=60, stations=6,
+                    knuckle=Knuckle.FULL,
+                    pin_style=PinStyle.ROUNDED)._resolve()
 
 
 def test_short_full_knuckle_cone_stays_within_hinge_length():

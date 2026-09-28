@@ -81,9 +81,9 @@ lid = lid + hinge.pin_side
 
 ## In context: a flat-open clamshell with HALF knuckle
 
-![clamshell with HALF knuckle and corner magnet pockets, flat-open print orientation](docs/diagrams/clamshell_half_preview.png)
+![clamshell with HALF knuckle and corner magnet pockets, flat-open print orientation](https://raw.githubusercontent.com/pzfreo/pip-hinge/main/docs/diagrams/clamshell_half_preview.png)
 
-Built by [`examples/clamshell.py`](examples/clamshell.py) — case_h = 10mm,
+Built by [`examples/clamshell.py`](https://github.com/pzfreo/pip-hinge/blob/main/examples/clamshell.py) — case_h = 10mm,
 80 × 50 mm footprint, 60 mm hinge with `Knuckle.HALF`, plus four 6 × 3 mm
 corner magnet pockets to latch the case shut. Both halves print as one
 piece in the orientation shown. The example also emits a bare HALF/FULL
@@ -91,7 +91,7 @@ variant (no magnets) for reference.
 
 ## Parameter reference
 
-![parameters guide](docs/diagrams/parameters_guide.png)
+![parameters guide](https://raw.githubusercontent.com/pzfreo/pip-hinge/main/docs/diagrams/parameters_guide.png)
 
 Cross-section (Panel A) shows the spatial parameters: `case_h` (wall
 height), `pivot_z_offset` (extra lift), `mounting_flat` (flat past the
@@ -101,7 +101,7 @@ station pitch (`hinge_length / stations`), and `clasp_clearance` between tabs.
 
 ## Knuckle sizes
 
-![knuckle options](docs/diagrams/knuckle_options.png)
+![knuckle options](https://raw.githubusercontent.com/pzfreo/pip-hinge/main/docs/diagrams/knuckle_options.png)
 
 | `knuckle`      | knuckle diameter            | ramp                  | gap between case walls (flat-open) |
 | -------------- | --------------------------- | --------------------- | ---------------------------------- |
@@ -114,7 +114,7 @@ The knuckle diameter `Po` is sized to the lifted axis height
 always `Po + 2 × mounting_flat` (= `2 × hinge.leaf_width`). For `case_h = 10`
 with the defaults that is 21.4 mm (FULL), 11.2 mm (HALF) and 6.1 mm (SMALL).
 
-See [docs/clamshell-integration.md](docs/clamshell-integration.md) for
+See [docs/clamshell-integration.md](https://github.com/pzfreo/pip-hinge/blob/main/docs/clamshell-integration.md) for
 mounting, orientation, multi-hinge layouts, and the closed-vs-open view.
 
 ## Provenance
@@ -140,14 +140,17 @@ configurable station count, knuckle sizes, pin profiles, and fit defaults.
 
 ## Quick start
 
-Install the latest release from [PyPI](https://pypi.org/project/pip-hinge/):
+This README describes version **0.3.0**. In a checkout of this version, install
+it for development with:
 
 ```bash
-uv add pip-hinge
+uv venv
+uv pip install -e .
 ```
 
-Use `uv pip install pip-hinge` instead when installing directly into an
-environment rather than adding it to a project.
+Once 0.3.0 is published on [PyPI](https://pypi.org/project/pip-hinge/), add
+the released package to a project with `uv add "pip-hinge>=0.3.0"`. Earlier
+releases do not include `PinStyle` or `FitProfile`.
 
 Then in your build123d code:
 
@@ -159,13 +162,12 @@ base = my_base + hinge.cylinder_side
 lid = my_lid + hinge.pin_side
 ```
 
-Or to play with it locally:
+To run the included examples from a checkout:
 
 ```bash
-git clone https://github.com/pzfreo/pip-hinge.git && cd pip-hinge
-uv pip install -e .                          # editable install
-python examples/clamshell.py                 # writes clamshell_{full,half,small,magnets}.{step,stl}
-python examples/hinge_only.py                # writes the bare hinge_{full,half}.{step,stl}
+uv run python examples/clamshell.py          # writes clamshell_{full,half,small,magnets}.{step,stl}
+uv run python examples/hinge_only.py         # writes the bare hinge_{full,half}.{step,stl}
+uv run python examples/conical_test_print.py --fit tighter  # two-size print plate with tighter fit
 ```
 
 ## Parameters
@@ -184,7 +186,7 @@ Fit and pin options:
 | Parameter         | Default | Meaning                                            |
 | ----------------- | ------- | -------------------------------------------------- |
 | `pin_style`       | `PinStyle.CONICAL` | `CONICAL`: 45° tapered pin tips; `ROUNDED`: original hemispherical tips; `BRIDGED`: one continuous cylindrical pin through every bored tab. BRIDGED is experimental; test it on your printer before using it in a case |
-| `knuckle_wall`    | `None`  | Material thickness around the pin bore. `None` gives conical pins at least 1.0 mm of modeled wall, expanding the pin toward the knuckle radius; short hinges use a thicker wall to keep the tips inside the hinge length. Rounded and bridged pins retain the original half-radius wall. Check the actual perimeter count in your slicer; set a value in mm to override |
+| `knuckle_wall`    | `None`  | Material thickness around the pin bore. `None` gives conical pins at least 1.0 mm of modeled wall and grows the pin where station spacing permits. Short hinges use a thicker wall so adjacent tips stay separate and within the stated length. Rounded and bridged pins retain the original half-radius wall. Check the actual perimeter count in your slicer; set a value in mm to override |
 | `mounting_flat`   | 0.5     | Width in mm of the flat leaf strip beyond the knuckle where the case wall joins. At or below the resolved `pivot_clearance` the bare leaf can contain separate solids that join when fused to the wall |
 | `pivot_clearance` | `None`  | Difference in mm between bore and pin diameters. `None` selects the fit profile's value: 0.6 mm with STANDARD, or 0.4 mm for tested small conical hinges with TIGHT. The radial gap is half this value |
 | `pivot_z_offset`  | 0.2     | Lift of the hinge axis above the wall top. When closed, the lid then rests `2 × pivot_z_offset` above the base instead of meeting it on a zero-tolerance plane, so a high spot along the seam can't spring the front of the case open. Only the knuckle is raised — the leaves stay flush with the wall top. `0` disables it; must be less than the knuckle radius |
@@ -193,10 +195,10 @@ Fit and pin options:
 
 ### Tighter fit for small conical hinges
 
-The [two-size conical test plate](examples/test_prints/README.md) printed and
+The [two-size conical test plate](https://github.com/pzfreo/pip-hinge/blob/main/examples/test_prints/README.md) printed and
 released with the standard 0.3 mm gaps, but both lids rocked around the pin
 and the smaller case also slid along the hinge axis. The
-[tighter trial](examples/test_prints/tighter_fit/README.md) printed well on that
+[tighter trial](https://github.com/pzfreo/pip-hinge/blob/main/examples/test_prints/tighter_fit/README.md) printed well on that
 printer. Select it with:
 
 ```python
@@ -221,7 +223,7 @@ Station pitch is `hinge_length / stations`. The radial gap is half of
 profile. Fit still depends on the printer, material, and slicer settings;
 try a small test print before committing to a large case.
 
-![Cutaway of a continuous bridged pin](docs/diagrams/bridged_pin.svg)
+![Cutaway of a continuous bridged pin](https://raw.githubusercontent.com/pzfreo/pip-hinge/main/docs/diagrams/bridged_pin.svg)
 
 `BRIDGED` makes the printer span each bored tab with an unsupported pin.
 The unsupported distance is approximately `hinge_length / stations +
@@ -231,6 +233,11 @@ the 60 mm, 6-station defaults. The default `pivot_clearance` leaves only
 can use up that space and fuse the hinge, even when the CAD solids are
 separate. Use `CONICAL` for a first print; tune `pivot_clearance` and
 `clasp_clearance` with a small test piece if trying `BRIDGED`.
+
+`ROUNDED` preserves the older pin and bore sizing. On a large barrel with
+closely spaced stations, neighbouring rounded tips can meet inside a bore;
+the library warns because the joined span may sag or fuse during printing.
+The default `CONICAL` profile keeps an axial gap between its tips.
 
 For 4 or more stations, the two middle tab types have the same width,
 `hinge_length / stations − clasp_clearance`. Each end cap has half that width.
@@ -249,11 +256,13 @@ settings do not affect the continuous `BRIDGED` pin.
 
 ### Geometry changes in 0.3
 
-The default pin is now conical and uses a wider bore than the original
-rounded pin. `PinStyle.ROUNDED` retains the original pin tip profile and
-bore diameter. The automatic tab gap is now a fixed 0.3 mm measured between
-faces, with equal-width middle tabs on both sides. Re-export existing designs and check
-the pin and tab fit before relying on an older printed part.
+The default pin is now conical. It can use a wider bore than the original
+rounded pin when station spacing leaves room for separate 45° tips; on
+shorter hinges it uses a smaller bore to prevent those tips from joining.
+`PinStyle.ROUNDED` retains the original pin tip profile and bore diameter.
+The STANDARD tab gap is 0.3 mm measured between faces, with equal-width
+middle tabs on both sides. Re-export existing designs and check the pin and
+tab fit before relying on an older printed part.
 
 ## Validation
 
@@ -275,7 +284,7 @@ Start with 0.2 mm layers and the part-cooling fan on. If adhesion needs a
 brim, keep it clear of the hinge gaps. After printing, gently flex the leaves
 to break the clearance gaps free.
 
-For a first fit check, [print the two-size conical clamshell test plate](examples/test_prints/README.md).
+For a first fit check, [print the two-size conical clamshell test plate](https://github.com/pzfreo/pip-hinge/blob/main/examples/test_prints/README.md).
 
 - **FULL** knuckle body rests on the bed without supports. The optional
   `BRIDGED` pin still requires an unsupported bridge through each bore.
@@ -304,7 +313,7 @@ built on top of it.
 ## License
 
 This work is licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/),
-matching the upstream Printables source. See [LICENSE](LICENSE).
+matching the upstream Printables source. See [LICENSE](https://github.com/pzfreo/pip-hinge/blob/main/LICENSE).
 
 When using or redistributing, please credit:
 

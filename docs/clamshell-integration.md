@@ -31,9 +31,10 @@ through every bored tab. `BRIDGED` is experimental: bridge sag can fuse the
 pin to the bore despite the modeled clearance, so test it before printing
 a complete case.
 
-The conical default also widens the pin bore while keeping at least 1.0 mm
-of modeled material around it. Check the actual perimeter count in your
-slicer; `knuckle_wall` sets the thickness explicitly.
+The conical default uses as much bore radius as the knuckle wall and station
+spacing allow while keeping at least 1.0 mm of modeled material around the
+bore and separate tips. Check the actual perimeter count in your slicer;
+`knuckle_wall` sets the thickness explicitly.
 
 The fit controls are:
 `mounting_flat` (default 0.5 mm of flat past the disc edge for case-wall

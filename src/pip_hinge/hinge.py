@@ -97,9 +97,9 @@ class HingeParams:
             selected from FULL, HALF, or SMALL relative to the case height.
         pin_style (PinStyle): conical tips, rounded tips, or one continuous pin.
         knuckle_wall (float | None): wall thickness in mm around each bore.
-            None uses a printable wall for CONICAL and the original bore
-            size for ROUNDED and BRIDGED. Short conical hinges may need a
-            thicker wall so the tips fit within hinge_length.
+            None uses at least 1 mm of wall for CONICAL while keeping adjacent
+            tips separate, and the original bore size for ROUNDED and BRIDGED.
+            Short conical hinges may need a thicker wall to fit the tips.
         mounting_flat (float): width in mm of the flat attachment strip beyond
             each knuckle's outer edge, toward the case wall.
         pivot_clearance (float | None): difference in mm between bore and pin
@@ -232,15 +232,32 @@ class HingeParams:
                 middle_limit = (self.hinge_length / 2 - outer_middle
                                 - (Cw + self.pin_cyl_extra) / 2)
                 max_tip_radius = min(max_tip_radius, middle_limit)
+            # A tip extends one radius along Y. Without this limit,
+            # neighbouring tips can meet inside a bored tab. Conical pins
+            # must retain a Cc gap so they do not form an unsupported span.
+            if k == 1:
+                separate_tip_limit = end_base - Cc / 2
+            else:
+                outer_middle_base = (k - 2) * Cw + (Cw + self.pin_cyl_extra) / 2
+                separate_tip_limit = (end_base - outer_middle_base - Cc) / 2
+                if k > 2:
+                    separate_tip_limit = min(
+                        separate_tip_limit,
+                        (Cw - self.pin_cyl_extra - Cc) / 2,
+                    )
+            if self.pin_style is PinStyle.CONICAL:
+                max_tip_radius = min(max_tip_radius, separate_tip_limit)
             if max_tip_radius <= 0:
                 raise ValueError(
-                    "pin_cyl_extra leaves no room for pin tips within hinge_length"
+                    "pin shanks leave no room for pin tips within hinge_length; "
+                    "reduce stations or pin_cyl_extra"
                 )
 
         if self.knuckle_wall is None:
             # The 45-degree cone can use most of the barrel radius while
             # retaining at least 1 mm of material around the bore.
-            # Short hinges may need a thicker wall to keep the tips in bounds.
+            # Short hinges may need a thicker wall to keep tips in bounds and
+            # separate from the neighbouring segments.
             wall = (max(1.0, 0.1 * Ro,
                         Ro - max_tip_radius - Pc / 2)
                     if self.pin_style is PinStyle.CONICAL else Ro / 2)
@@ -260,8 +277,17 @@ class HingeParams:
         if (max_tip_radius is not None
                 and Pi / 2 - Pc / 2 > max_tip_radius + 1e-9):
             raise ValueError(
-                "pin tips extend beyond hinge_length; increase hinge_length "
-                "or knuckle_wall, or reduce pin_cyl_extra"
+                "pin tips exceed available space within hinge_length or touch "
+                "neighbouring tips; increase hinge_length or knuckle_wall, "
+                "or reduce pin_cyl_extra"
+            )
+        if (self.pin_style is PinStyle.ROUNDED
+                and Pi / 2 - Pc / 2 > separate_tip_limit + Cc / 2 + 1e-9):
+            warnings.warn(
+                "rounded pin tips meet inside a bore at this station pitch; "
+                "the joined span may sag or fuse during printing. Increase "
+                "hinge_length or knuckle_wall to separate them.",
+                stacklevel=3,
             )
         return {
             "case_h": self.case_h,
@@ -572,7 +598,8 @@ class PrintInPlaceHinge(Compound):
             around its bore. None gives CONICAL a wall of at least 1.0 mm,
             or uses the original half-radius wall for ROUNDED and BRIDGED.
             On short hinges the conical wall grows to keep tips within the
-            stated length. Reduce only if your printer can make a thinner wall.
+            stated length and separate from neighbouring tips. Reduce only
+            if your printer can make a thinner wall and the tips still fit.
         mounting_flat (float): width in mm of the flat leaf strip beyond the
             knuckle edge where the case wall attaches. At or below
             the resolved ``pivot_clearance`` the bare leaf may have separate solids; fusing
