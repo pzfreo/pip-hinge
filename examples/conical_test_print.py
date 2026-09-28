@@ -1,9 +1,11 @@
 """Export two sizes of clamshell for a conical-pin print test.
 
 Run from the repository root with ``.venv/bin/python examples/conical_test_print.py``.
+Use ``--fit tighter`` to test less play on the same cases.
 The cases are laid flat, open side up, with a 6 mm gap between them.
 """
 
+import argparse
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -44,13 +46,19 @@ def case_half(size: CaseSize, sign: int, leaf_width: float):
     return outer - inner
 
 
-def build_case(size: CaseSize) -> Compound:
+def build_case(
+    size: CaseSize,
+    pivot_clearance: float = 0.6,
+    clasp_clearance: float | None = None,
+) -> Compound:
     hinge = PrintInPlaceHinge(
         case_h=size.wall_height,
         hinge_length=size.hinge_length,
         stations=size.stations,
         knuckle=Knuckle.SMALL,
         pin_style=PinStyle.CONICAL,
+        pivot_clearance=pivot_clearance,
+        clasp_clearance=clasp_clearance,
     )
     base = case_half(size, +1, hinge.leaf_width) + hinge.cylinder_side
     lid = case_half(size, -1, hinge.leaf_width) + hinge.pin_side
@@ -58,11 +66,25 @@ def build_case(size: CaseSize) -> Compound:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--fit", choices=("baseline", "tighter"), default="baseline",
+        help="baseline uses 0.3 mm gaps; tighter reduces the gaps with observed play",
+    )
+    args = parser.parse_args()
+    pivot_clearance = 0.6 if args.fit == "baseline" else 0.4
     out = Path(__file__).parent / "test_prints"
-    out.mkdir(exist_ok=True)
+    if args.fit == "tighter":
+        out /= "tighter_fit"
+    out.mkdir(parents=True, exist_ok=True)
     cases = []
     for size in (SMALL, LARGE):
-        case = build_case(size)
+        clasp_clearance = 0.2 if args.fit == "tighter" and size is SMALL else None
+        case = build_case(
+            size,
+            pivot_clearance=pivot_clearance,
+            clasp_clearance=clasp_clearance,
+        )
         if not case.is_valid or len(case.solids()) != 2:
             raise RuntimeError(f"{size.name} case is not two valid, separate leaves")
         if abs(case.bounding_box().min.Z) > 1e-6:
