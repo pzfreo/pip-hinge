@@ -3,7 +3,7 @@ applies on the hinge geometry. Two panels:
 
   Panel A (cross-section in X-Z): case_h, mounting_flat, PIVOT_Z_OFFSET,
           Po, Ro, T, W, plus the bore/pin closeup (Pi, Rp, pivot_clearance).
-  Panel B (top view in X-Y):       hinge_length, stations, clasp_width,
+  Panel B (top view in X-Y):       hinge_length, stations, station pitch,
           clasp_clearance, the alternating cs/ps tab pattern.
 
 Run:
@@ -13,28 +13,27 @@ Writes:
 """
 from pathlib import Path
 
+from pip_hinge import HingeParams, Knuckle
+
 # Example dimensions (chosen to make the diagram readable). All in mm.
 WALL_H = 10.0
 PIVOT_Z_OFFSET = 0.2
-HINGE_CASE_H = WALL_H + PIVOT_Z_OFFSET   # what HingeParams.case_h gets
-
-# Use HALF knuckle for the cross-section so the ramp is visible.
-KNUCKLE_LABEL = "HALF"
-Po = HINGE_CASE_H                         # HALF: Po = case_h
-Ro = Po / 2
-T = Ro
 MOUNTING_FLAT = 0.5
-W = Ro + MOUNTING_FLAT
-
-PC = 0.6
-Pi = Ro                                   # bore Ø = knuckle radius
-Rp = Pi / 2 - PC / 2
-
 WALL_T = 2.5
 HINGE_LENGTH = 60.0
 STATIONS = 6
-CW = HINGE_LENGTH / STATIONS
-CC = 0.4
+# Use HALF so the underside ramp is visible. Resolve all dimensions from
+# the library itself so the drawing stays in step with its defaults.
+KNUCKLE = Knuckle.HALF
+P = HingeParams(case_h=WALL_H, hinge_length=HINGE_LENGTH, stations=STATIONS,
+                knuckle=KNUCKLE, mounting_flat=MOUNTING_FLAT,
+                pivot_z_offset=PIVOT_Z_OFFSET)._resolve()
+KNUCKLE_LABEL = KNUCKLE.name
+HINGE_CASE_H = WALL_H + PIVOT_Z_OFFSET
+Po, Ro, T, W = P["Po"], P["Ro"], P["T"], P["W"]
+PC, Pi = P["Pc"], P["Pi"]
+Rp = Pi / 2 - PC / 2
+CW, CC = P["Cw"], P["Cc"]
 
 # ── Panel A: cross-section X-Z ──────────────────────────────────────────
 PANEL_A_W = 100        # mm
@@ -91,8 +90,8 @@ def panel_a():
                  f'WALL_H={WALL_H:.1f}, PIVOT_Z_OFFSET={PIVOT_Z_OFFSET:.1f}, '
                  f'Knuckle.{KNUCKLE_LABEL}, mounting_flat={MOUNTING_FLAT:.1f}</text>')
 
-    # Coordinate system: bed at SVG_y=PANEL_A_H-3, hinge axis cx=PANEL_A_W/2
-    cx = PANEL_A_W / 2
+    # Leave room on the right for the enlarged conical pin/bore callout.
+    cx = 38
     bed_y = PANEL_A_H - 3
     def pt(x, z):
         return (cx + x, bed_y - z)
@@ -158,14 +157,14 @@ def panel_a():
                  f'{TICK_FONT} fill="{DERIVED_COLOR}">(Ro = Po/2, T = Ro)</text>')
 
     # 4. W on the leaf top, ABOVE the leaf (one row only)
-    leaf_top_y = pt(0, HINGE_CASE_H)[1] - 3.5
+    leaf_top_y = pt(0, HINGE_CASE_H)[1] - 8
     parts.append(dim_h(pt(0, HINGE_CASE_H)[0], pt(W, HINGE_CASE_H)[0],
                        leaf_top_y, f"W = Ro + mounting_flat = {W:.1f}",
                        color=DERIVED_COLOR, label_offset=-1.0))
 
     # 5. mounting_flat alone, on the bottom edge of the leaf (clear of the
     #    W label above), pointing down so its label sits below the leaf bottom.
-    mflat_y = pt(W, 0)[1] + 2.5
+    mflat_y = pt(W, 0)[1] + 0.5
     parts.append(dim_h(pt(Ro, 0)[0], pt(W, 0)[0], mflat_y,
                        f"mounting_flat = {MOUNTING_FLAT}", label_offset=1.3))
 
@@ -189,18 +188,17 @@ def panel_a():
     parts.append(f'<text x="{callout_x:.2f}" y="{callout_y - callout_r - 0.6:.2f}" '
                  f'{TICK_FONT} fill="#666" text-anchor="middle">pin / bore detail (3×)</text>')
 
-    # Labels to the LEFT of the callout, stacked vertically (won't collide
-    # with the disc / dimension lines which are far below in panel space).
+    # Labels to the left of the callout, above the hinge dimensions.
     label_x = callout_x - callout_r - 1
-    parts.append(f'<text x="{label_x:.2f}" y="{callout_y - 1.6:.2f}" '
+    parts.append(f'<text x="{label_x:.2f}" y="10.0" '
                  f'{TICK_FONT} fill="{DERIVED_COLOR}" text-anchor="end">'
                  f'Pi = {Pi:.1f} (bore Ø)</text>')
-    parts.append(f'<text x="{label_x:.2f}" y="{callout_y - 0.2:.2f}" '
+    parts.append(f'<text x="{label_x:.2f}" y="11.5" '
                  f'{TICK_FONT} fill="{DERIVED_COLOR}" text-anchor="end">'
                  f'2·Rp = {2*Rp:.1f} (pin Ø)</text>')
-    parts.append(f'<text x="{label_x:.2f}" y="{callout_y + 1.2:.2f}" '
+    parts.append(f'<text x="{label_x:.2f}" y="13.0" '
                  f'{TICK_FONT} fill="{PARAM_COLOR}" text-anchor="end">'
-                 f'pivot_clearance = {PC} (radial gap × 2)</text>')
+                 f'pivot_clearance = {PC} (radial gap = {PC/2:.1f})</text>')
 
     # Leader line from disc to callout
     cs_dx, cs_dy = pt(0, HINGE_CASE_H)
@@ -221,7 +219,7 @@ def panel_b(y_off):
                  f'Panel B — Top view (X-Y plane), one cs leaf</text>')
     parts.append(f'<text x="1" y="4.2" {TICK_FONT} fill="#666">'
                  f'hinge_length={HINGE_LENGTH:.0f}, stations={STATIONS}, '
-                 f'clasp_width={CW:.1f}, clasp_clearance={CC:.1f}</text>')
+                 f'station_pitch={CW:.1f}, clasp_clearance={CC:.1f}</text>')
 
     # Layout: Y axis horizontal (since hinge length is long), X axis vertical
     # for visibility. Top of panel = X away from disc, bottom = X toward disc.
@@ -269,8 +267,8 @@ def panel_b(y_off):
     # ps tabs (greyed out for context)
     ps_centres = [(-(k-2) + 2*i) * CW for i in range(k-1)]
     for yc in ps_centres:
-        y_lo = py(yc - CW/2)
-        y_hi = py(yc + CW/2)
+        y_lo = py(yc - half_tab)
+        y_hi = py(yc + half_tab)
         parts.append(f'<rect x="{y_lo:.2f}" y="{tab_x_top:.2f}" '
                      f'width="{y_hi-y_lo:.2f}" height="{tab_x_bot - tab_x_top:.2f}" '
                      f'fill="rgba(0,0,0,0.05)" stroke="#888" stroke-width="0.12" '
@@ -280,9 +278,9 @@ def panel_b(y_off):
     for sign in (-1, +1):
         if sign < 0:
             y_lo = py(-HINGE_LENGTH/2)
-            y_hi = py(-HINGE_LENGTH/2 + CW/2)
+            y_hi = py(-HINGE_LENGTH/2 + (CW-CC)/2)
         else:
-            y_lo = py(HINGE_LENGTH/2 - CW/2)
+            y_lo = py(HINGE_LENGTH/2 - (CW-CC)/2)
             y_hi = py(HINGE_LENGTH/2)
         parts.append(f'<rect x="{y_lo:.2f}" y="{tab_x_top:.2f}" '
                      f'width="{y_hi-y_lo:.2f}" height="{tab_x_bot - tab_x_top:.2f}" '
@@ -293,10 +291,10 @@ def panel_b(y_off):
     parts.append(dim_h(py(y_min_mm), py(y_max_mm), tab_x_bot + 3,
                        f"hinge_length = {HINGE_LENGTH:.0f}", color=PARAM_COLOR))
 
-    # Dimension: clasp_width (one Cw segment)
+    # Dimension: station pitch (one Cw segment)
     parts.append(dim_h(py(-CW*0.5), py(CW*0.5),
                        tab_x_top - 1.8,
-                       f"clasp_width = hinge_length/stations = {CW:.1f}",
+                       f"station pitch = hinge_length/stations = {CW:.1f}",
                        color=DERIVED_COLOR))
 
     # Clasp clearance — tiny gap between cs and ps tabs

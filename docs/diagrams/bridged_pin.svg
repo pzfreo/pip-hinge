@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 470" width="920" height="470" role="img" aria-labelledby="title description">
+  <title id="title">How the continuous bridged pin works</title>
+  <desc id="description">Lengthwise cutaway of a 20 millimetre hinge with four stations. One orange pin runs through two blue bored cylinder-side knuckles and is fused to the three green pin-side tabs. The CAD model leaves clearance around the pin, but a printed bridge can sag and fuse to a bore.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#46546a"/>
+    </marker>
+  </defs>
+
+  <rect width="920" height="470" fill="#fff"/>
+  <text x="45" y="43" fill="#202735" font-family="sans-serif" font-size="25" font-weight="600">Continuous bridged pin</text>
+  <text x="45" y="68" fill="#586579" font-family="sans-serif" font-size="15">Lengthwise cutaway along the rotation axis · 20 mm hinge, 4 stations</text>
+
+  <!-- Alternating tabs: half-width pin-side caps, full-width bored tabs, and a middle pin-side tab. -->
+  <g font-family="sans-serif" font-size="14" text-anchor="middle" fill="#202735">
+    <text x="143" y="104"><tspan x="143">pin-side</tspan><tspan x="143" dy="17">end cap</tspan></text>
+    <text x="280" y="104"><tspan x="280">cylinder-side</tspan><tspan x="280" dy="17">bored knuckle</tspan></text>
+    <text x="460" y="104"><tspan x="460">pin-side</tspan><tspan x="460" dy="17">middle tab</tspan></text>
+    <text x="640" y="104"><tspan x="640">cylinder-side</tspan><tspan x="640" dy="17">bored knuckle</tspan></text>
+    <text x="777" y="104"><tspan x="777">pin-side</tspan><tspan x="777" dy="17">end cap</tspan></text>
+  </g>
+
+  <!-- Blue knuckles have a bore: their inner edges stop short of the pin. -->
+  <g fill="#dceafb" stroke="#2563a6" stroke-width="2">
+    <rect x="195.4" y="145" width="169.2" height="34"/>
+    <rect x="195.4" y="223" width="169.2" height="34"/>
+    <rect x="555.4" y="145" width="169.2" height="34"/>
+    <rect x="555.4" y="223" width="169.2" height="34"/>
+  </g>
+
+  <!-- Green pin-side material meets the orange pin with no gap. -->
+  <g fill="#ddf1e7" stroke="#2f7d64" stroke-width="2">
+    <rect x="100" y="145" width="84.6" height="43"/>
+    <rect x="100" y="214" width="84.6" height="43"/>
+    <rect x="375.4" y="145" width="169.2" height="43"/>
+    <rect x="375.4" y="214" width="169.2" height="43"/>
+    <rect x="735.4" y="145" width="84.6" height="43"/>
+    <rect x="735.4" y="214" width="84.6" height="43"/>
+  </g>
+
+  <!-- One uninterrupted pin crosses both blue bores and joins all green tabs. -->
+  <rect x="100" y="188" width="720" height="26" fill="#f6c27f" stroke="#b96412" stroke-width="2"/>
+  <line x1="108" y1="201" x2="812" y2="201" stroke="#b96412" stroke-width="1.5" stroke-dasharray="8 6" opacity="0.8"/>
+
+  <g font-family="sans-serif" font-size="15" fill="#202735">
+    <text x="100" y="298" fill="#a7570c">One solid pin, fused to all three green pin-side tabs</text>
+    <line x1="460" y1="280" x2="460" y2="217" stroke="#a7570c" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <text x="548" y="326" fill="#2563a6">The pin crosses each blue bore without touching it</text>
+    <line x1="638" y1="304" x2="638" y2="215" stroke="#46546a" stroke-width="1.6" marker-end="url(#arrow)"/>
+  </g>
+
+  <line x1="100" y1="348" x2="820" y2="348" stroke="#46546a" stroke-width="1.4" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <text x="460" y="342" text-anchor="middle" fill="#46546a" font-family="sans-serif" font-size="14">hinge length along Y = 20 mm</text>
+
+  <!-- Transverse section at a bored cylinder-side tab. -->
+  <circle cx="145" cy="412" r="43" fill="#dceafb" stroke="#2563a6" stroke-width="2"/>
+  <circle cx="145" cy="412" r="29" fill="#fff" stroke="#2563a6" stroke-width="1.5"/>
+  <circle cx="145" cy="412" r="21" fill="#f6c27f" stroke="#b96412" stroke-width="2"/>
+  <text x="205" y="403" fill="#202735" font-family="sans-serif" font-size="15">Cross section inside a blue knuckle</text>
+  <text x="205" y="427" fill="#586579" font-family="sans-serif" font-size="14">CAD clearance remains only if the printed bridge does not sag into the bore.</text>
+</svg>

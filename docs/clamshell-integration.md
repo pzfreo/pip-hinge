@@ -13,7 +13,7 @@ case wall itself.
 ## The four inputs
 
 ```python
-from pip_hinge import Knuckle, PrintInPlaceHinge
+from pip_hinge import Knuckle, PinStyle, PrintInPlaceHinge
 
 hinge = PrintInPlaceHinge(
     case_h        = 10,             # case wall height (mm)
@@ -24,15 +24,29 @@ hinge = PrintInPlaceHinge(
 cylinder_side, pin_side = hinge.cylinder_side, hinge.pin_side
 ```
 
-Everything else (knuckle diameter, leaf width, pin radius, pocket clearances)
-is derived from these four. Two small tuning knobs remain:
+Knuckle diameter, leaf width, and pin radius are derived from the first four
+inputs. The conical pin is the default; choose `PinStyle.ROUNDED` for the
+original hemispherical tips, or `PinStyle.BRIDGED` for one continuous pin
+through every bored tab. `BRIDGED` is experimental: bridge sag can fuse the
+pin to the bore despite the modeled clearance, so test it before printing
+a complete case.
+
+The conical default uses as much bore radius as the knuckle wall and station
+spacing allow while keeping at least 1.0 mm of modeled material around the
+bore and separate tips. Check the actual perimeter count in your slicer;
+`knuckle_wall` sets the thickness explicitly.
+
+The fit controls are:
 `mounting_flat` (default 0.5 mm of flat past the disc edge for case-wall
 attachment — the cs body fragments into multiple solids at this size but
 they fuse into the case wall, see "Common gotchas" below), `pivot_clearance`
-(radial pin/bore gap), and `clasp_clearance` (axial gap between meshing
-tabs).
+(difference between pin and bore diameters; the radial gap is half of it),
+and `clasp_clearance` (the gap along Y between neighbouring tabs). With the
+default `FitProfile.STANDARD`, both radial and axial gaps are 0.3 mm. See the
+[tight-fit rule](../README.md#tighter-fit-for-small-conical-hinges) for the
+small conical hinges print tested at 0.2 mm.
 
-## The two knuckle options
+## Knuckle sizes
 
 ![FULL vs HALF cross-section](diagrams/knuckle_options.png)
 
@@ -83,21 +97,20 @@ Geometric properties:
   per unit of horizontal travel. At default `mounting_flat = 0.5 mm`, the
   ramp sits at ~22° from vertical — comfortably self-supporting (versus
   HALF at ~48° which works in practice but is at the FDM-cooling limit).
-- Pin diameter for `case_h = 10 mm`: 1.9 mm — at the lower bound of
-  reliable FDM print. For smaller cases the 5 mm floor preserves this.
-- Auto-`clasp_clearance` scales with knuckle diameter Po: 0.2 mm at
-  Po = 5 mm (matches r0berts' original tight value), linear up to
-  0.4 mm at Po ≥ 10 mm. SMALL at the typical `case_h = 10 mm` lands
-  at 0.2 mm; a larger SMALL (e.g. case_h = 20 → Po = 10.1) auto-relaxes
-  to 0.4. Pass an explicit `clasp_clearance` to override.
+- With the standard conical fit, the pin diameter for `case_h = 10 mm` is
+  2.5 mm. The 5 mm floor preserves room for a printable bore wall on
+  smaller cases.
+- `FitProfile.STANDARD` uses a 0.3 mm gap between neighbouring tabs. Use
+  `FitProfile.TIGHT` for the tested small conical sizes, or set
+  `clasp_clearance` explicitly for your printer's fit.
 
 ## Closed vs flat-open
 
 ![closed and flat-open views](diagrams/closed_vs_open.png)
 
 The closed-case profile shows the D-shaped bulge at the back. When flat-open
-for printing, the same knuckle sits at axis `Z = case_h` (the seam between
-lid and base when closed), with the leaves extending from the axis down to
+for printing, the same knuckle sits at axis
+`Z = case_h + pivot_z_offset`, with the leaves extending from the axis down to
 the bed.
 
 ## Coordinate convention
@@ -118,6 +131,8 @@ move the leaves (children are relative to their parent in build123d, so
 moving the hinge itself does not move `hinge.cylinder_side`):
 
 ```python
+from build123d import Pos
+
 at = Pos(x0 - hinge.leaf_width, y_centre, 0)
 base = base + at * hinge.cylinder_side
 lid  = lid  + at * hinge.pin_side
@@ -125,9 +140,11 @@ lid  = lid  + at * hinge.pin_side
 
 ## Stations
 
-`stations` is the count of alternating tabs along the hinge length
-(cs = cylinder side, ps = pin side).
-Must be even and ≥ 2. `clasp_width = hinge_length / stations`.
+`stations` is the even number of tab positions along the rotation axis Y
+(cs = cylinder side, ps = pin side). Two end caps each occupy half a
+position. Any even count of at least 2 is accepted. Each full tab is
+`hinge_length / stations - clasp_clearance` wide, so the STANDARD profile
+leaves a 0.3 mm gap between neighbouring tab faces.
 
 | stations | tabs                                          | typical use         |
 | -------- | --------------------------------------------- | ------------------- |
@@ -136,7 +153,7 @@ Must be even and ≥ 2. `clasp_width = hinge_length / stations`.
 | 6        | 3 cs, 2 ps middle, 2 ps half-end-caps         | default             |
 | 8, 10, … | scales up cleanly                             | long hinges         |
 
-Below `clasp_width ≈ 3mm` the tabs become too thin to print cleanly on FDM
+Below a physical tab width of about 3 mm the tabs become thin for FDM
 — a warning is emitted.
 
 ## One hinge or many?
@@ -297,19 +314,18 @@ segmented.
 - **Wrong case_h**: `case_h` is the *wall height* of one case half, not the
   combined closed-case height. At FULL the knuckle works out to
   `2 × (case_h + pivot_z_offset)` in diameter — about twice the wall.
-- **Too many stations**: doubling stations halves `clasp_width`. Below ~3 mm
-  clasps print poorly on FDM (a warning fires). For long hinges, keep
+- **Too many stations**: doubling stations halves the station pitch. A tab
+  width below ~3 mm may print poorly on FDM (a warning fires). For long hinges, keep
   stations at 6–10 and scale `hinge_length` instead.
-- **Picking HALF for big knuckles**: at HALF the knuckle is one wall's
-  height. For small cases (`case_h < ~5 mm`) the resulting bore gets close
-  to the pin clearance and the pin barely fits — a hard error fires.
-  Pick FULL for tiny cases.
+- **Very small HALF knuckles**: as `case_h` shrinks, the bore can become too
+  small for `pivot_clearance`; the constructor raises a clear error. Choose
+  SMALL (with its 5 mm diameter floor) or FULL for tiny cases.
 - **Increasing mounting_flat for HALF**: bigger mounting_flat means
   shallower ramp (still self-supporting). But the gap between case halves
   also grows. 1–2 mm is usually plenty for fusion.
 - **Reducing mounting_flat below pivot_clearance**: at very small
-  `mounting_flat` (< `pivot_clearance`, default 0.6 mm) the leaf strip at
-  X ∈ [Ro+Pc, W] collapses to zero/negative width — the bare hinge
+  `mounting_flat` (< the resolved `pivot_clearance`, 0.6 mm with STANDARD)
+  the leaf strip at X ∈ [Ro+Pc, W] collapses to zero/negative width — the bare hinge
   then comes back as N/2 + ~N/2 fragmented solids instead of 2.
   This is fine **as long as you fuse the hinge into a case**: each
   fragment shares its outer face with the case wall and fuses with it on
@@ -327,14 +343,18 @@ segmented.
 For most clamshell cases:
 
 ```python
+from pip_hinge import FitProfile, Knuckle, PinStyle, PrintInPlaceHinge
+
 PrintInPlaceHinge(
     case_h          = wall_h,            # case wall height
     hinge_length    = back_edge_length,  # total length along the hinge axis
     stations        = 6,                 # default
     knuckle         = Knuckle.FULL,      # or HALF for a more compact knuckle
+    pin_style       = PinStyle.CONICAL,  # 45-degree tips; ROUNDED or BRIDGED available
     mounting_flat   = 0.5,               # mm of flat past the disc for fusion (default)
-    pivot_clearance = 0.6,               # default — works on most FDM printers
+    fit_profile     = FitProfile.STANDARD, # default; TIGHT for tested small conical hinges
+    pivot_clearance = None,              # select from fit_profile; 0.6 here
     pivot_z_offset  = 0.2,               # default — axis lift above the wall top
-    clasp_clearance = None,              # default — auto-scales with knuckle size
+    clasp_clearance = None,              # select from fit_profile; 0.3 here
 )
 ```
