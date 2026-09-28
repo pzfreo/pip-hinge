@@ -240,8 +240,11 @@ And warns (`warnings.warn`) when:
 ## Printing
 
 Lay flat on the bed with the hinge axis along Y (parallel to bed).
-0.2 mm layers, fan on, brim recommended. After printing, gently flex the
-leaves to break the clearance gaps free.
+Start with 0.2 mm layers and the part-cooling fan on. If adhesion needs a
+brim, keep it clear of the hinge gaps. After printing, gently flex the leaves
+to break the clearance gaps free.
+
+For a first fit check, [print the two-size conical clamshell test plate](examples/test_prints/README.md).
 
 - **FULL** knuckle body rests on the bed without supports. The optional
   `BRIDGED` pin still requires an unsupported bridge through each bore.

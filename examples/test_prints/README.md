@@ -1,0 +1,31 @@
+# Conical-pin clamshell test print
+
+The [combined STL](conical_clamshell_pair.stl) contains two flat-open,
+print-in-place clamshells, side by side with a 6 mm gap. Both use explicit
+`PinStyle.CONICAL`, `Knuckle.HALF`, and the library's default 0.3 mm axial
+tab gap and 0.3 mm radial pin-to-bore gap.
+
+| Case | Half footprint | Wall height | Hinge length | Stations | Flat-open footprint |
+| --- | --- | ---: | ---: | ---: | --- |
+| [Small](conical_clamshell_small.stl) | 35 × 28 mm | 6 mm | 24 mm | 4 | 63.2 × 35 mm |
+| [Large](conical_clamshell_large.stl) | 60 × 42 mm | 10 mm | 48 mm | 6 | 95.2 × 60 mm |
+
+The combined footprint is about **164.4 × 60 mm** before any brim. Import
+the combined STL once, keep its open sides facing up and its flat bottoms on
+the bed, and print without generated supports. Start at 0.2 mm layers with a
+0.4 mm nozzle, and leave the slicer scale at 100%. Start without a brim; if
+adhesion needs one, keep it at 2 mm or less and inspect the hinge gaps in the
+slicer preview. The [STEP assembly](conical_clamshell_pair.step) is provided for CAD
+inspection; use the STL for slicing.
+
+After cooling, gently move each lid to free the print-in-place clearance.
+Record whether each hinge releases, whether it rotates without binding, and
+whether the lids close without a gap caused by the hinge. CAD checks cannot
+predict all printer effects, so treat this as a fit test before printing a
+larger case.
+
+Regenerate the files from the repository root:
+
+```bash
+.venv/bin/python examples/conical_test_print.py
+```
