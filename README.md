@@ -91,17 +91,14 @@ variant (no magnets) for reference.
 
 ## Quick start
 
-This README describes version **0.3.0**. In a checkout of this version, install
-it for development with:
+Install version **0.3.0** from [PyPI](https://pypi.org/project/pip-hinge/)
+with `uv add "pip-hinge>=0.3.0"`. Earlier releases do not include `PinStyle`
+or `FitProfile`. In a checkout, install it for development with:
 
 ```bash
 uv venv
 uv pip install -e .
 ```
-
-Once 0.3.0 is published on [PyPI](https://pypi.org/project/pip-hinge/), add
-the released package to a project with `uv add "pip-hinge>=0.3.0"`. Earlier
-releases do not include `PinStyle` or `FitProfile`.
 
 Then in your build123d code:
 
