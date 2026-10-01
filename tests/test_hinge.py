@@ -316,9 +316,10 @@ def test_clearance_inputs_reject_colliding_geometry():
     "case_h,hinge_length,stations,expected_axial",
     [(6, 24, 4, 0.2), (10, 48, 6, 0.3)],
 )
-def test_tight_fit_matches_printed_small_conical_cases(
+def test_tight_fit_retains_clearance_values_from_printed_cases(
     case_h, hinge_length, stations, expected_axial
 ):
+    """The successful prints had these gaps, but used the old round bore."""
     common = dict(case_h=case_h, hinge_length=hinge_length,
                   stations=stations, knuckle=Knuckle.SMALL,
                   pin_style=PinStyle.CONICAL)
@@ -334,6 +335,34 @@ def test_tight_fit_matches_printed_small_conical_cases(
         h.cylinder_side.solids()[0].wrapped, h.pin_side.solids()[0].wrapped)
     dss.Perform()
     assert dss.Value() == pytest.approx(0.2, abs=0.01)
+
+
+def test_conical_bore_follows_pin_tips():
+    """The bore narrows into each knuckle rather than staying cylindrical."""
+    h = PrintInPlaceHinge(case_h=10, hinge_length=60, stations=6,
+                          knuckle=Knuckle.SMALL, mounting_flat=1.0)
+    p = h.params._resolve()
+    cs = h.cylinder_side.solids()[0]
+    # The central cylinder-side tab runs from Y=-4.85 to +4.85. Near its
+    # left face the bore admits the whole shank; farther in it follows the
+    # cone, leaving material at the same radius.
+    radius = p["Pi"] / 2 - 0.1
+    assert not cs.is_inside((0, -4.7, h.axis_z + radius))
+    assert cs.is_inside((0, -3.4, h.axis_z + radius))
+    assert cs.is_inside((0, 0, h.axis_z))
+
+
+def test_bridged_bore_has_self_supporting_roof_and_wall():
+    h = PrintInPlaceHinge(case_h=10, hinge_length=60, stations=6,
+                          knuckle=Knuckle.SMALL, pin_style=PinStyle.BRIDGED,
+                          mounting_flat=1.0)
+    p = h.params._resolve()
+    cs = h.cylinder_side.solids()[0]
+    top_of_round_bore = h.axis_z + p["Pi"] / 2
+    roof_tip = h.axis_z + math.sqrt(2) * p["Pi"] / 2
+    assert not cs.is_inside((0, 0, (top_of_round_bore + roof_tip) / 2))
+    assert cs.is_inside((0, 0, roof_tip + 0.1))
+    assert p["Ro"] - (roof_tip - h.axis_z) >= 1.0 - 1e-6
 
 
 def test_tight_fit_is_narrow_and_explicit_clearances_override_it():

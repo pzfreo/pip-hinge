@@ -59,9 +59,10 @@ class Knuckle(Enum):
 class PinStyle(Enum):
     """Shape of the pin captured inside the cylinder-side knuckles.
 
-    CONICAL uses 45-degree tips at each pin-side tab. ROUNDED retains the
-    original hemispherical tips. BRIDGED runs one cylindrical pin through
-    every knuckle. It is experimental: bridge sag can fuse the pin to a bore.
+    CONICAL uses 45-degree tips and matching bores. ROUNDED retains the
+    original hemispherical tips and round bores. BRIDGED runs one cylindrical
+    pin through every knuckle under a teardrop bore roof. It is experimental:
+    its roof and unsupported pin spans have not been print-tested together.
     """
 
     CONICAL = "conical"
@@ -70,9 +71,11 @@ class PinStyle(Enum):
 
 
 class FitProfile(Enum):
-    """Clearance defaults for a printer-tested subset of hinge sizes.
+    """Clearance defaults derived from a printed subset of hinge sizes.
 
-    TIGHT narrows conical pins on approximately 5 mm SMALL knuckles. It also
+    The successful prints used the earlier cylindrical bore; retest the
+    current shaped bore before relying on the same fit. TIGHT narrows the
+    clearance on approximately 5 mm conical SMALL knuckles. It also
     narrows the axial tab gap when the station pitch is at most 6 mm.
     Explicit pivot_clearance and clasp_clearance values always take priority.
     """
@@ -95,15 +98,20 @@ class HingeParams:
             and at least 2. The two end tabs each occupy half a position.
         knuckle (Knuckle): outer diameter of the round hinge barrels,
             selected from FULL, HALF, or SMALL relative to the case height.
-        pin_style (PinStyle): conical tips, rounded tips, or one continuous pin.
-        knuckle_wall (float | None): wall thickness in mm around each bore.
+        pin_style (PinStyle): CONICAL tips, ROUNDED tips, or one continuous
+            BRIDGED pin.
+        knuckle_wall (float | None): radial wall thickness in mm around each
+            bore at the widest round section.
             None uses at least 1 mm of wall for CONICAL while keeping adjacent
-            tips separate, and the original bore size for ROUNDED and BRIDGED.
+            tips separate, the original bore size for ROUNDED, and at least
+            1 mm above the BRIDGED bore's teardrop roof.
             Short conical hinges may need a thicker wall to fit the tips.
         mounting_flat (float): width in mm of the flat attachment strip beyond
-            each knuckle's outer edge, toward the case wall.
+            each knuckle's outer edge, toward the case wall. It keeps the
+            attached wall clear of the rotating barrel.
         pivot_clearance (float | None): difference in mm between bore and pin
-            diameters; the radial gap on each side is half this value. None
+            diameters at the straight shank. The radial gap there, and the
+            normal gap between CONICAL slopes, is half this value. None
             selects the fit profile's default.
         pivot_z_offset (float): height in mm of the rotation axis above the
             case wall top. The closed seam gap is twice this value.
@@ -117,7 +125,8 @@ class HingeParams:
             beyond each neighbouring tab face is half this plus half the
             tab gap.
         pin_end_offset (float): distance in mm that each end pin's straight
-            shank reaches from the end cap into the adjacent bore.
+            shank protrudes past its end cap face. Its reach beyond the
+            neighbouring tab face is this value minus clasp_clearance.
         pin_short_cyl_factor (float): end pin shank length as a fraction of
             one tab position's width; the rest is buried in the end cap.
     """
@@ -258,9 +267,14 @@ class HingeParams:
             # retaining at least 1 mm of material around the bore.
             # Short hinges may need a thicker wall to keep tips in bounds and
             # separate from the neighbouring segments.
-            wall = (max(1.0, 0.1 * Ro,
-                        Ro - max_tip_radius - Pc / 2)
-                    if self.pin_style is PinStyle.CONICAL else Ro / 2)
+            if self.pin_style is PinStyle.CONICAL:
+                wall = max(1.0, 0.1 * Ro, Ro - max_tip_radius - Pc / 2)
+            elif self.pin_style is PinStyle.BRIDGED:
+                # The 45-degree bore roof rises to sqrt(2) times the round
+                # bore radius. Preserve at least 1 mm of material above it.
+                wall = max(Ro / 2, Ro - (Ro - 1.0) / math.sqrt(2))
+            else:
+                wall = Ro / 2
         else:
             wall = self.knuckle_wall
         if wall <= 0 or wall >= Ro:
@@ -273,6 +287,12 @@ class HingeParams:
             raise ValueError(
                 f"pivot_clearance must be > 0 and smaller than bore Ø "
                 f"({Pi:.2f}); got {Pc}"
+            )
+        if (self.pin_style is PinStyle.BRIDGED
+                and Ro - math.sqrt(2) * Pi / 2 < 1.0 - 1e-9):
+            raise ValueError(
+                "knuckle_wall leaves less than 1 mm above the bridged bore's "
+                "self-supporting roof; increase knuckle_wall"
             )
         if (max_tip_radius is not None
                 and Pi / 2 - Pc / 2 > max_tip_radius + 1e-9):
@@ -446,6 +466,15 @@ def _pin_loops(N: int, Cw: float, Cc: float, Rp: float, style: PinStyle,
     return loops
 
 
+def _bridged_bore_profile(radius: float):
+    """Round lower bore with a 45-degree roof above the continuous pin."""
+    shoulder = radius / math.sqrt(2)
+    return (CenterArc(center=(0, 0), radius=radius,
+                      start_angle=135, arc_size=270)
+            + Polyline((shoulder, shoulder), (0, 2 * shoulder),
+                       (-shoulder, shoulder)))
+
+
 # ── main constructor ──────────────────────────────────────────────────────────
 
 def _build_leaves(p: dict) -> tuple[Compound, Compound]:
@@ -535,7 +564,16 @@ def _build_leaves(p: dict) -> tuple[Compound, Compound]:
                 + CenterArc(center=(0, 0), radius=Ro, start_angle=start, arc_size=arc))
 
     cs_profile = _leaf_profile(W)
-    cs_sketch = Sketch() + Plane.XZ * (make_face(cs_profile) - Circle(Ri))
+    if p["pin_style"] is PinStyle.CONICAL:
+        # The cut follows the actual shanks and 45-degree tips, expanded by
+        # Pc/2 radially. The same slope puts the cavity apex Pc/2 beyond the
+        # pin apex, providing both radial and axial tip clearance.
+        cs_section = make_face(cs_profile)
+    elif p["pin_style"] is PinStyle.BRIDGED:
+        cs_section = make_face(cs_profile) - make_face(_bridged_bore_profile(Ri))
+    else:
+        cs_section = make_face(cs_profile) - Circle(Ri)
+    cs_sketch = Sketch() + Plane.XZ * cs_section
     cs_pad = extrude(cs_sketch, amount=H / 2, both=True)
     # Pocket polygon left edge must stay left of the notch jogs (which go to -Xi),
     # otherwise the polyline self-intersects and OCC misclassifies the interior.
@@ -543,6 +581,17 @@ def _build_leaves(p: dict) -> tuple[Compound, Compound]:
     Xo_cs = min(Xi - W, -Xi - 1.0)
     cs_pocket = make_face(_cs_pocket_polyline(N, Cw, Cc, Xi, Xo_cs))
     cylinder_side = cs_pad - extrude(cs_pocket, amount=pocket_extrude, both=True)
+    if p["pin_style"] is PinStyle.CONICAL:
+        # Moving the 45-degree cone base toward its tip by this distance
+        # gives Pc/2 clearance measured normal to the cone, while retaining
+        # Pc/2 radial clearance along the straight shanks.
+        cone_shift = (math.sqrt(2) - 1) * Pc / 2
+        for cavity in _pin_loops(N, Cw, Cc, Ri, PinStyle.CONICAL,
+                                 p["pin_cyl_extra"] + 2 * cone_shift,
+                                 p["pin_end_offset"] + cone_shift,
+                                 p["pin_short"] + cone_shift / Cw):
+            cylinder_side = cylinder_side - revolve(
+                make_face(cavity), axis=Axis.Y, revolution_arc=-360)
 
     # ── ps (pin-side) leaf ───────────────────────────────────────────────────
     ps_profile = _leaf_profile(-W)
@@ -594,19 +643,22 @@ class PrintInPlaceHinge(Compound):
         pin_style (PinStyle): CONICAL tips for 45-degree slopes, ROUNDED tips
             as in the original hinge, or one continuous BRIDGED pin. BRIDGED
             needs a printer-specific bridge and clearance test.
-        knuckle_wall (float | None): thickness in mm of the knuckle material
-            around its bore. None gives CONICAL a wall of at least 1.0 mm,
-            or uses the original half-radius wall for ROUNDED and BRIDGED.
+        knuckle_wall (float | None): radial thickness in mm of the knuckle
+            material around its bore at the widest round section. None gives
+            CONICAL at least 1.0 mm of wall, uses the original half-radius
+            wall for ROUNDED, and keeps at least 1.0 mm above the BRIDGED roof.
             On short hinges the conical wall grows to keep tips within the
             stated length and separate from neighbouring tips. Reduce only
             if your printer can make a thinner wall and the tips still fit.
         mounting_flat (float): width in mm of the flat leaf strip beyond the
-            knuckle edge where the case wall attaches. At or below
+            knuckle edge where the case wall attaches. This keeps the wall
+            clear of the rotating barrel. At or below
             the resolved ``pivot_clearance`` the bare leaf may have separate solids; fusing
             it to the case wall joins them.
         pivot_clearance (float | None): difference in mm between the bore and
-            pin diameters. The radial gap between their surfaces is half this.
-            None selects the fit profile's default.
+            pin diameters at the straight shank. The radial gap there, and
+            the normal gap between CONICAL slopes, is half this value. None
+            selects the fit profile's default.
         pivot_z_offset (float): height in mm of the axis above the case wall
             top. This leaves a closed seam gap twice as large; the leaf tops
             remain flush with the wall top. Zero removes the offset.
@@ -622,7 +674,8 @@ class PrintInPlaceHinge(Compound):
             protrudes ``(pin_cyl_extra + clasp_clearance) / 2`` beyond each
             middle tab face.
         pin_end_offset (float): distance in mm an end pin's straight shank
-            reaches into the neighbouring bore from its end cap.
+            protrudes past its end cap face. Its reach into the neighbouring
+            bored tab is this value minus clasp_clearance.
         pin_short_cyl_factor (float): end pin's straight shank length as a
             fraction of one station width. The far end is buried in the cap.
             These three shank settings do not affect BRIDGED pins.
