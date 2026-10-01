@@ -160,6 +160,11 @@ The four primary inputs:
 | `stations`     | 6              | Even count of tab positions along Y, at least 2. Each end cap occupies half a position; 4, 6, 8, … are supported |
 | `knuckle`      | `Knuckle.FULL` | `FULL`, `HALF`, or `SMALL` — see the option table below |
 
+`stations` counts alternating tab positions, not pin pairs or bored tabs.
+For example, four stations make two bored cylinder-side tabs, one full
+pin-side middle tab, and two half-width pin-side end caps. Any even count of
+at least two is accepted; the usable count also depends on tab width.
+
 Fit and pin options:
 
 | Parameter         | Default | Meaning                                            |
@@ -203,7 +208,12 @@ conical-tip normal gap are half of `pivot_clearance`, so 0.2 mm means
 `pivot_clearance=0.4`. Passing
 `pivot_clearance` or `clasp_clearance` explicitly overrides that part of the
 profile. Fit still depends on the printer, material, and slicer settings;
-try a small test print before committing to a large case.
+try a small test print before committing to a large case. The successful
+prints reported here were made on one **Bambu Lab P1S**. Material, nozzle
+diameter, line width, layer height, and slicer profile were not recorded.
+These results do not establish separate clearance recommendations for 0.4 mm
+and 0.6 mm nozzles; use the [small Python trial](examples/shaped_bore_pair.py)
+to check a different setup.
 
 ### Pin shapes and print tradeoffs
 
@@ -245,14 +255,17 @@ For example, a 20 mm hinge with 4 stations and the default gap has two
 end caps. The pin shank and tips extend into the bores beyond the middle
 tab; that visible pin is wider than the tab itself.
 
-Three advanced settings change the straight shanks of the `CONICAL` and
-`ROUNDED` pins. `pin_cyl_extra` adds to the station width to give the middle
-shank length; it protrudes `(pin_cyl_extra + clasp_clearance) / 2` past each
+The *shank* is the constant-diameter part of a pin between its pin-side tab
+and its tapered or rounded tip. Three advanced settings change the shanks of
+the `CONICAL` and `ROUNDED` pins. `pin_cyl_extra` adds to the station width to
+give the middle shank length; it protrudes
+`(pin_cyl_extra + clasp_clearance) / 2` past each
 middle tab face. `pin_end_offset` sets how far an end shank protrudes past its
 end cap face; its reach into the next bored tab is that value minus
 `clasp_clearance`. `pin_short_cyl_factor × (hinge_length / stations)` is
 the total end shank length, including the portion buried in the cap. These
-settings do not affect the continuous `BRIDGED` pin.
+settings do not affect the continuous `BRIDGED` pin. That pin runs the full
+`hinge_length`; a shorter bridged pin is not currently parameterized.
 
 ### Geometry changes in 0.3
 
@@ -336,6 +349,8 @@ The original is a spreadsheet-driven FreeCAD model. This repository:
 Per the CC BY 4.0 terms: design and dimensional relationships are
 r0berts'; modifications are the build123d port, the four-input API, the
 configurable station count, knuckle sizes, pin profiles, and fit defaults.
+The original model's printer settings and extent of physical testing are
+not documented in this repository.
 
 ## License
 
