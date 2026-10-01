@@ -32,7 +32,7 @@ alongside the result. A valid CAD clearance does not guarantee release.
 Regenerate from the repository root:
 
 ```bash
-.venv/bin/python examples/conical_bore_trial.py
+python examples/conical_bore_trial.py
 ```
 
 To reproduce **both** printed cases from Python, including the two dots that
