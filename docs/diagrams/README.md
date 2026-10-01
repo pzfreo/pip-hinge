@@ -1,7 +1,8 @@
 # Diagrams
 
 Figures used in `docs/clamshell-integration.md` and the project README.
-`bridged_pin.svg` shows the continuous pin option in a lengthwise cutaway.
+`pin_profiles.svg` compares the three pin and bore sections;
+`bridged_pin.svg` shows the continuous pin along the hinge axis.
 
 ## Geometry diagrams (SVG → PNG)
 

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 470" width="920" height="470" role="img" aria-labelledby="title description">
   <title id="title">How the continuous bridged pin works</title>
-  <desc id="description">Lengthwise cutaway of a 20 millimetre hinge with four stations. One orange pin runs through two blue bored cylinder-side knuckles and is fused to the three green pin-side tabs. The CAD model leaves clearance around the pin, but a printed bridge can sag and fuse to a bore.</desc>
+  <desc id="description">Lengthwise cutaway of a 20 millimetre hinge with four stations. One orange pin runs through two blue bored cylinder-side knuckles and is fused to the three green pin-side tabs. The small end cross section shows a 45-degree teardrop roof over the round pin. The CAD model leaves clearance, but a printed bridge can sag and fuse to a bore.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#46546a"/>
@@ -54,8 +54,8 @@
 
   <!-- Transverse section at a bored cylinder-side tab. -->
   <circle cx="145" cy="412" r="43" fill="#dceafb" stroke="#2563a6" stroke-width="2"/>
-  <circle cx="145" cy="412" r="29" fill="#fff" stroke="#2563a6" stroke-width="1.5"/>
+  <path d="M124.5 391.5 A29 29 0 1 0 165.5 391.5 L145 371 Z" fill="#fff" stroke="#2563a6" stroke-width="1.5"/>
   <circle cx="145" cy="412" r="21" fill="#f6c27f" stroke="#b96412" stroke-width="2"/>
-  <text x="205" y="403" fill="#202735" font-family="sans-serif" font-size="15">Cross section inside a blue knuckle</text>
+  <text x="205" y="403" fill="#202735" font-family="sans-serif" font-size="15">Cross section: 45° teardrop roof above round pin</text>
   <text x="205" y="427" fill="#586579" font-family="sans-serif" font-size="14">CAD clearance remains only if the printed bridge does not sag into the bore.</text>
 </svg>

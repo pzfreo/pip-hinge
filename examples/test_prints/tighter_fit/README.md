@@ -8,6 +8,11 @@ both with `Knuckle.SMALL` and `PinStyle.CONICAL`. `pivot_clearance` changes
 from 0.6 to 0.4 mm on both cases, so the modeled radial pin-to-bore gap
 drops from 0.3 to **0.2 mm**. The small case's axial tab gap drops from
 0.3 to **0.2 mm**; the large case keeps the proven **0.3 mm** axial gap.
+These exported files use the earlier cylindrical bore. The current code
+uses a shaped conical bore; the [new small trial](../shaped_bore_trial/README.md)
+tested that change and also printed well. The exact printer, material,
+nozzle, line width, layer height, and slicer settings for the successful
+prints were not recorded here.
 
 | Case | Half footprint | Hinge length | Radial gap | Axial gap | Individual STL |
 | --- | --- | ---: | ---: | ---: | --- |
@@ -29,7 +34,11 @@ the lid is lifted at its far edge? Check whether the small lid also slides
 less along the hinge axis. A 0.2 mm modeled gap can still fuse on another
 printer, so do not treat CAD validity or one successful setup as a guarantee.
 
-Regenerate these files from the repository root:
+The command below exports the **current** geometry and will replace these
+historical test files if run in this directory. To reproduce the original
+exports exactly, run it from commit `502896f` instead.
+
+From the repository root:
 
 ```bash
 .venv/bin/python examples/conical_test_print.py --fit tighter

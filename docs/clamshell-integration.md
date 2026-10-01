@@ -28,23 +28,27 @@ Knuckle diameter, leaf width, and pin radius are derived from the first four
 inputs. The conical pin is the default; choose `PinStyle.ROUNDED` for the
 original hemispherical tips, or `PinStyle.BRIDGED` for one continuous pin
 through every bored tab. `BRIDGED` is experimental: bridge sag can fuse the
-pin to the bore despite the modeled clearance, so test it before printing
-a complete case.
+pin to the bore despite the modeled clearance. Its revised teardrop roof
+released in one small clamshell print, but that hinge rocked and felt much
+looser than the conical one. Test it before printing a complete case.
 
-The conical default uses as much bore radius as the knuckle wall and station
-spacing allow while keeping at least 1.0 mm of modeled material around the
-bore and separate tips. Check the actual perimeter count in your slicer;
+The conical default uses a bore that follows the shank and 45° tips. The
+knuckle wall and station spacing limit its widest radius while keeping at
+least 1.0 mm of modeled material and separate tips. Check the actual
+perimeter count in your slicer;
 `knuckle_wall` sets the thickness explicitly.
 
 The fit controls are:
 `mounting_flat` (default 0.5 mm of flat past the disc edge for case-wall
-attachment — the cs body fragments into multiple solids at this size but
+attachment and clearance from the rotating barrel — the cs body fragments into multiple solids at this size but
 they fuse into the case wall, see "Common gotchas" below), `pivot_clearance`
-(difference between pin and bore diameters; the radial gap is half of it),
+(difference between pin and bore diameters at the shank; the radial gap there
+and normal gap along conical tips are half of it),
 and `clasp_clearance` (the gap along Y between neighbouring tabs). With the
 default `FitProfile.STANDARD`, both radial and axial gaps are 0.3 mm. See the
 [tight-fit rule](../README.md#tighter-fit-for-small-conical-hinges) for the
-small conical hinges print tested at 0.2 mm.
+0.2 mm gap values tested on small conical hinges with both the earlier
+cylindrical bore and the newer shaped bore.
 
 ## Knuckle sizes
 
@@ -185,6 +189,22 @@ base_body = base_body + hinge.cylinder_side
 lid_body  = lid_body  + hinge.pin_side
 ```
 
+If your assembly already uses build123d joints, place the leaves through
+their named `"mount"` and `"pivot"` joints. Here `x0` is the base back wall's
+outer X face and `y_centre` is the hinge centre along that wall:
+
+```python
+from build123d import Location, RigidJoint
+
+RigidJoint("hinge", base_body, Location((x0, y_centre, 0)))
+base_body.joints["hinge"].connect_to(hinge.cylinder_side.joints["mount"])
+hinge.cylinder_side.joints["pivot"].connect_to(
+    hinge.pin_side.joints["pivot"], angle=0
+)
+base_body = base_body + hinge.cylinder_side
+lid_body = lid_body + hinge.pin_side
+```
+
 The leaf's outer face (at `X = hinge.leaf_width`) is where the case wall attaches.
 `mounting_flat` controls the flat strip of leaf material past the disc edge
 that the wall actually glues / fuses to — 0.5 mm is the default and is
@@ -211,15 +231,16 @@ walls extending up, hinge axis at the top of the back walls.
 
 - **Knuckle.FULL**: knuckle bottom rests on the bed at `Z = 0` (since
   `Po = 2 × (case_h + pivot_z_offset)` and the axis is at
-  `Z = case_h + pivot_z_offset`). No ramp, no
-  in-air bridging. Prints cleanly regardless of knuckle size.
+  `Z = case_h + pivot_z_offset`). The outer barrel needs no ramp. The
+  optional BRIDGED pin still has unsupported spans inside the bores.
 - **Knuckle.HALF**: knuckle bottom hovers at `Z = (case_h + pivot_z_offset) / 2`. The 45°
   ramps on each leaf converge at the knuckle bottom, supporting it from
   below. Prints supportless at any case size, but you need to choose
   `mounting_flat` small enough that the ramp angle stays ≤ 45°.
 
-In both cases the case walls themselves provide the structural support
-below the hinge — no in-air bridging needed across the wall faces.
+In both cases the case walls provide structural support below the outer
+hinge body. The optional BRIDGED pin still needs a printer-specific bridge
+test inside the bore.
 
 ## Opening angle
 

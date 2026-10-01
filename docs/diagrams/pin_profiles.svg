@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" width="900" height="280" role="img" aria-labelledby="title description">
+  <title id="title">Pin and bore profiles</title>
+  <desc id="description">Conceptual cutaways: conical pins face matching tapered cavities, rounded pins face a cylindrical bore, and the continuous bridged pin sits under a teardrop bore roof. Blue is knuckle material, orange is pin material, and white is clearance.</desc>
+  <rect width="900" height="280" fill="#fff"/>
+  <text x="28" y="30" font-family="sans-serif" font-size="23" font-weight="600" fill="#202735">Pin and bore profiles</text>
+  <text x="28" y="53" font-family="sans-serif" font-size="14" fill="#586579">Conceptual sections · blue knuckle · orange pin · white clearance · not to scale</text>
+
+  <g font-family="sans-serif" font-size="17" font-weight="600" fill="#202735">
+    <text x="36" y="90">CONICAL</text><text x="335" y="90">ROUNDED</text><text x="632" y="90">BRIDGED</text>
+  </g>
+
+  <!-- Axial section through a bored tab, with two opposing conical tips. -->
+  <g stroke="#2563a6" stroke-width="2" fill="#dceafb">
+    <rect x="35" y="105" width="260" height="125" rx="3"/>
+    <rect x="335" y="105" width="260" height="125" rx="3"/>
+  </g>
+  <path d="M35 137 L75 137 L141 166 L153 166 L221 137 L295 137 L295 198 L221 198 L153 169 L141 169 L75 198 L35 198 Z" fill="#fff" stroke="#2563a6" stroke-width="2"/>
+  <path d="M35 145 L75 145 L137 167.5 L75 190 L35 190 Z M295 145 L221 145 L157 167.5 L221 190 L295 190 Z" fill="#f6c27f" stroke="#b96412" stroke-width="2"/>
+
+  <!-- The legacy cylindrical bore stays wide around rounded ends. -->
+  <rect x="335" y="137" width="260" height="61" fill="#fff" stroke="#2563a6" stroke-width="2"/>
+  <path d="M335 145 L408 145 A23 23 0 0 1 408 190 L335 190 Z M595 145 L522 145 A23 23 0 0 0 522 190 L595 190 Z" fill="#f6c27f" stroke="#b96412" stroke-width="2"/>
+
+  <!-- Transverse section of one bored tab for the continuous pin. -->
+  <circle cx="752" cy="168" r="63" fill="#dceafb" stroke="#2563a6" stroke-width="2"/>
+  <path d="M724 140 A40 40 0 1 0 780 140 L752 112 Z" fill="#fff" stroke="#2563a6" stroke-width="2"/>
+  <circle cx="752" cy="168" r="28" fill="#f6c27f" stroke="#b96412" stroke-width="2"/>
+
+  <g font-family="sans-serif" font-size="13" fill="#46546a" text-anchor="middle">
+    <text x="165" y="253">Axial section: two matching 45° cavities</text>
+    <text x="465" y="253">Axial section: round bore around tips</text>
+    <text x="752" y="253">End section: 45° roof over round pin</text>
+  </g>
+</svg>

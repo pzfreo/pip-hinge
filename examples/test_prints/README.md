@@ -12,6 +12,10 @@ but their rocking play was more than expected. The small case also slid along
 the hinge axis. A [tighter fit trial](tighter_fit/README.md) subsequently
 printed well: it reduces the radial pin gap on both cases and the axial tab
 gap on the small case. Keep this original plate as the baseline for comparison.
+These exported files retain the earlier cylindrical bore. The current code
+uses a shaped conical bore; the [new small trial](shaped_bore_trial/README.md)
+tested that change and printed well. The nozzle and layer values below are suggested starting
+settings, not a complete record of the successful printer setup.
 
 | Case | Half footprint | Wall height | Hinge length | Stations | Flat-open footprint |
 | --- | --- | ---: | ---: | ---: | --- |
@@ -32,7 +36,11 @@ whether the lids close without a gap caused by the hinge. CAD checks cannot
 predict all printer effects, so treat this as a fit test before printing a
 larger case.
 
-Regenerate the files from the repository root:
+The command below exports the **current** geometry and will replace these
+historical test files if run in this directory. To reproduce the original
+exports exactly, run it from commit `502896f` instead.
+
+From the repository root:
 
 ```bash
 .venv/bin/python examples/conical_test_print.py
