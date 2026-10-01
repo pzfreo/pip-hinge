@@ -11,8 +11,9 @@ STL uses the original cylindrical bore and remains available for comparison.
 
 The comparison used the same 24 mm, four-station SMALL hinge on both cases.
 The conical case used `FitProfile.TIGHT` (0.2 mm radial and axial gaps); the
-bridged case used `FitProfile.STANDARD` (0.3 mm radial and axial gaps). Printer,
-material, line width, and layer height were not recorded with this result.
+bridged case used `FitProfile.STANDARD` (0.3 mm radial and axial gaps). These
+results came from one **Bambu Lab P1S**; material, nozzle diameter, line
+width, layer height, and slicer profile were not recorded.
 The teardrop roof leaves about 0.74 mm of modeled space above the bridged
 pin at its peak, which helps explain the rocking despite the 0.3 mm gap at
 the round sides.
@@ -20,9 +21,16 @@ the round sides.
 The trial uses `Knuckle.SMALL`, a 24 mm hinge with four stations, and
 `FitProfile.TIGHT`. Its case halves each measure 35 × 28 × 6 mm. Print the
 [STL](conical_shaped_bore_small.stl) at 100% scale, flat on the bed with the
-open sides up and generated supports off. Start with a 0.4 mm nozzle and
-0.2 mm layers; check the bore and pin in the slicer preview before printing.
+open sides up and generated supports off. Use a calibrated slicer profile;
+the successful print does not establish nozzle-specific settings. Check the
+bore and pin in the slicer preview before printing.
 The [STEP file](conical_shaped_bore_small.step) is for CAD inspection.
+
+In the slicer preview, check three regions before starting: the first-layer
+gaps between moving parts must remain open; the conical tips must remain
+separate inside each bored tab; and the bridged pin's unsupported spans must
+use bridge toolpaths. The diagrams show CAD geometry, not actual slicer
+toolpaths or measured prints.
 
 After cooling, check that the hinge releases and rotates without binding.
 Compare lid rocking and axial sliding against the earlier tighter-fit print.
@@ -32,5 +40,28 @@ alongside the result. A valid CAD clearance does not guarantee release.
 Regenerate from the repository root:
 
 ```bash
-.venv/bin/python examples/conical_bore_trial.py
+python examples/conical_bore_trial.py
 ```
+
+To reproduce **both** printed cases from Python, including the two dots that
+mark the bridged base, run:
+
+```bash
+python examples/shaped_bore_pair.py
+```
+
+This writes individual STEP files and a 130 × 35 mm pair with a 6 mm gap in
+the current directory: conical on the left, bridged on the right. The script
+defaults to the printed gaps above; it does not change the library's default
+fit settings.
+
+If the pin fuses to its bore, try increasing only that case's radial gap by
+0.05 mm, for example `--conical-radial-gap 0.25`. The script sets
+`pivot_clearance` to twice the requested radial gap. If adjacent knuckle
+faces fuse, increase that case's axial gap by 0.05–0.1 mm, for example
+`--conical-axial-gap 0.25`. For the bridged case, inspect the unsupported
+pin spans and bore roof in the slicer and check its bridge settings; more
+clearance may release it but will add to its already noticeable play.
+For a different printer or nozzle, treat these as starting CAD gaps and
+calibrate with a small print. There is no validated 0.4 mm versus 0.6 mm
+nozzle tolerance table from the available P1S prints.

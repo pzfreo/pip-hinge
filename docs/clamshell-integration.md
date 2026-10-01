@@ -30,7 +30,10 @@ original hemispherical tips, or `PinStyle.BRIDGED` for one continuous pin
 through every bored tab. `BRIDGED` is experimental: bridge sag can fuse the
 pin to the bore despite the modeled clearance. Its revised teardrop roof
 released in one small clamshell print, but that hinge rocked and felt much
-looser than the conical one. Test it before printing a complete case.
+looser than the conical one. These observations came from one Bambu Lab P1S;
+other printer and nozzle combinations have not been validated. See the
+[print trial](../examples/test_prints/shaped_bore_trial/README.md) before
+printing a complete case.
 
 The conical default uses a bore that follows the shank and 45° tips. The
 knuckle wall and station spacing limit its widest radius while keeping at

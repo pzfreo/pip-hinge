@@ -1,6 +1,6 @@
 """Export one small clamshell to test the shaped conical bore.
 
-Run from the repository root with ``.venv/bin/python examples/conical_bore_trial.py``.
+Run from the repository root with ``python examples/conical_bore_trial.py``.
 This geometry released and felt good in one small clamshell print; the earlier
 test plates remain intact.
 """
