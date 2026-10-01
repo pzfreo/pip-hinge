@@ -34,3 +34,22 @@ Regenerate from the repository root:
 ```bash
 .venv/bin/python examples/conical_bore_trial.py
 ```
+
+To reproduce **both** printed cases from Python, including the two dots that
+mark the bridged base, run:
+
+```bash
+.venv/bin/python examples/shaped_bore_pair.py --out /tmp/shaped-bore-trial
+```
+
+This writes individual STEP files and a 130 × 35 mm pair with a 6 mm gap:
+conical on the left, bridged on the right. The script defaults to the printed
+gaps above; it does not change the library's default fit settings.
+
+If the pin fuses to its bore, try increasing only that case's radial gap by
+0.05 mm, for example `--conical-radial-gap 0.25`. The script sets
+`pivot_clearance` to twice the requested radial gap. If adjacent knuckle
+faces fuse, increase that case's axial gap by 0.05–0.1 mm, for example
+`--conical-axial-gap 0.25`. For the bridged case, inspect the unsupported
+pin spans and bore roof in the slicer and check its bridge settings; more
+clearance may release it but will add to its already noticeable play.

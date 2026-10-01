@@ -286,6 +286,9 @@ to break the clearance gaps free.
 
 For a first fit check of the current conical bore, use the
 [small shaped-bore trial](examples/test_prints/shaped_bore_trial/README.md).
+The [paired Python example](examples/shaped_bore_pair.py) generates the
+conical and bridged cases used in the printed comparison and accepts gap
+overrides for printer calibration.
 The [earlier two-size plate](https://github.com/pzfreo/pip-hinge/blob/main/examples/test_prints/README.md)
 documents the cylindrical-bore prints and their fit results.
 
