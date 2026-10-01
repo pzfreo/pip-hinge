@@ -10,7 +10,7 @@ drops from 0.3 to **0.2 mm**. The small case's axial tab gap drops from
 0.3 to **0.2 mm**; the large case keeps the proven **0.3 mm** axial gap.
 These exported files use the earlier cylindrical bore. The current code
 uses a shaped conical bore; the [new small trial](../shaped_bore_trial/README.md)
-tests that change and has not yet been printed. The exact printer, material,
+tested that change and also printed well. The exact printer, material,
 nozzle, line width, layer height, and slicer settings for the successful
 prints were not recorded here.
 

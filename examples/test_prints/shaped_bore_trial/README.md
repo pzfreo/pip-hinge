@@ -6,13 +6,16 @@ The printed small case released and the hinge felt good. In the same print, a
 small `BRIDGED` case with a teardrop-roof bore also released, but was very
 loose and rocked around its pin. This is one print result, not a fit guarantee
 for other sizes or printers. The [earlier tighter-fit
-plate](../tighter_fit/README.md) is the one that printed successfully; its
+plate](../tighter_fit/README.md) also printed successfully; its
 STL uses the original cylindrical bore and remains available for comparison.
 
 The comparison used the same 24 mm, four-station SMALL hinge on both cases.
 The conical case used `FitProfile.TIGHT` (0.2 mm radial and axial gaps); the
 bridged case used `FitProfile.STANDARD` (0.3 mm radial and axial gaps). Printer,
 material, line width, and layer height were not recorded with this result.
+The teardrop roof leaves about 0.74 mm of modeled space above the bridged
+pin at its peak, which helps explain the rocking despite the 0.3 mm gap at
+the round sides.
 
 The trial uses `Knuckle.SMALL`, a 24 mm hinge with four stations, and
 `FitProfile.TIGHT`. Its case halves each measure 35 × 28 × 6 mm. Print the

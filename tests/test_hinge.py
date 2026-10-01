@@ -320,7 +320,7 @@ def test_clearance_inputs_reject_colliding_geometry():
 def test_tight_fit_retains_clearance_values_from_printed_cases(
     case_h, hinge_length, stations, expected_axial
 ):
-    """The successful prints had these gaps, but used the old round bore."""
+    """Printed old and new conical bores used these clearance values."""
     common = dict(case_h=case_h, hinge_length=hinge_length,
                   stations=stations, knuckle=Knuckle.SMALL,
                   pin_style=PinStyle.CONICAL)

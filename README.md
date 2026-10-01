@@ -179,7 +179,7 @@ released with the standard 0.3 mm gaps, but both lids rocked around the pin
 and the smaller case also slid along the hinge axis. The
 [tighter trial](https://github.com/pzfreo/pip-hinge/blob/main/examples/test_prints/tighter_fit/README.md) printed well on that
 printer. Both printed plates used the earlier cylindrical bore. The
-[new shaped-bore trial](https://github.com/pzfreo/pip-hinge/blob/main/examples/test_prints/shaped_bore_trial/README.md)
+[new shaped-bore trial](examples/test_prints/shaped_bore_trial/README.md)
 also released and felt good on that printer. Select the tighter gap values with:
 
 ```python
@@ -213,7 +213,7 @@ hemispherical tips and cylindrical bores. `BRIDGED` runs one continuous pin
 through the whole hinge, which can resist pulling the leaves apart along the
 axis, but its internal spans must print unsupported.
 
-![Conceptual conical, rounded, and bridged pin and bore sections](https://raw.githubusercontent.com/pzfreo/pip-hinge/main/docs/diagrams/pin_profiles.svg)
+![Conceptual conical, rounded, and bridged pin and bore sections](docs/diagrams/pin_profiles.svg)
 
 ![Cutaway of a continuous bridged pin](https://raw.githubusercontent.com/pzfreo/pip-hinge/main/docs/diagrams/bridged_pin.svg)
 
@@ -226,6 +226,8 @@ can use up that space and fuse the hinge, even when the CAD solids are
 separate. A tester reported that the earlier round bore roof settled onto
 the pin and fused. The revised 45° teardrop roof released in one small
 clamshell print, but that hinge was very loose and rocked around its pin.
+In that size, the pointed roof leaves about 0.74 mm of modeled space above
+the pin at its peak, even though the gap at the round sides is 0.3 mm.
 The conical hinge from the same print felt much better. Check in the slicer
 that the unsupported pin spans use bridge settings. Treat `BRIDGED` as an
 experimental option when a continuous pin is needed; do not assume its
@@ -283,7 +285,7 @@ brim, keep it clear of the hinge gaps. After printing, gently flex the leaves
 to break the clearance gaps free.
 
 For a first fit check of the current conical bore, use the
-[small shaped-bore trial](https://github.com/pzfreo/pip-hinge/blob/main/examples/test_prints/shaped_bore_trial/README.md).
+[small shaped-bore trial](examples/test_prints/shaped_bore_trial/README.md).
 The [earlier two-size plate](https://github.com/pzfreo/pip-hinge/blob/main/examples/test_prints/README.md)
 documents the cylindrical-bore prints and their fit results.
 

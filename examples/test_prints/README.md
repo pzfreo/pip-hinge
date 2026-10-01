@@ -14,7 +14,7 @@ printed well: it reduces the radial pin gap on both cases and the axial tab
 gap on the small case. Keep this original plate as the baseline for comparison.
 These exported files retain the earlier cylindrical bore. The current code
 uses a shaped conical bore; the [new small trial](shaped_bore_trial/README.md)
-tests that change. The nozzle and layer values below are suggested starting
+tested that change and printed well. The nozzle and layer values below are suggested starting
 settings, not a complete record of the successful printer setup.
 
 | Case | Half footprint | Wall height | Hinge length | Stations | Flat-open footprint |
