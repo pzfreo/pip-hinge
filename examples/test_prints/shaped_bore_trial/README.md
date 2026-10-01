@@ -39,12 +39,13 @@ To reproduce **both** printed cases from Python, including the two dots that
 mark the bridged base, run:
 
 ```bash
-.venv/bin/python examples/shaped_bore_pair.py --out /tmp/shaped-bore-trial
+python examples/shaped_bore_pair.py
 ```
 
-This writes individual STEP files and a 130 × 35 mm pair with a 6 mm gap:
-conical on the left, bridged on the right. The script defaults to the printed
-gaps above; it does not change the library's default fit settings.
+This writes individual STEP files and a 130 × 35 mm pair with a 6 mm gap in
+the current directory: conical on the left, bridged on the right. The script
+defaults to the printed gaps above; it does not change the library's default
+fit settings.
 
 If the pin fuses to its bore, try increasing only that case's radial gap by
 0.05 mm, for example `--conical-radial-gap 0.25`. The script sets

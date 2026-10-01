@@ -1,6 +1,6 @@
 """Export the two small clamshells from the successful shaped-bore print.
 
-Run from the repository root with ``.venv/bin/python examples/shaped_bore_pair.py``.
+Run from the repository root with ``python examples/shaped_bore_pair.py``.
 The bridged base has two raised dots to distinguish it after printing.
 """
 
