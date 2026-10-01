@@ -164,13 +164,13 @@ Fit and pin options:
 
 | Parameter         | Default | Meaning                                            |
 | ----------------- | ------- | -------------------------------------------------- |
-| `pin_style`       | `PinStyle.CONICAL` | `CONICAL`: 45° tapered pin tips in matching tapered bores; `ROUNDED`: original hemispherical tips in round bores; `BRIDGED`: one continuous cylindrical pin in a teardrop-roof bore. The revised CONICAL and BRIDGED bores are CAD-validated but not print-tested |
+| `pin_style`       | `PinStyle.CONICAL` | `CONICAL`: 45° tapered pin tips in matching tapered bores; `ROUNDED`: original hemispherical tips in round bores; `BRIDGED`: one continuous cylindrical pin in a teardrop-roof bore. Both revised bores released in one small clamshell print; the bridged hinge rocked noticeably |
 | `knuckle_wall`    | `None`  | Radial material thickness around the bore at its widest round section. `None` gives CONICAL at least 1.0 mm of modeled wall and grows the pin where station spacing permits. BRIDGED preserves at least 1.0 mm above its higher roof. Check the actual perimeter count in your slicer; set a value in mm to override |
 | `mounting_flat`   | 0.5     | Width in mm of the flat leaf strip beyond the knuckle where the case wall joins. At or below the resolved `pivot_clearance` the bare leaf can contain separate solids that join when fused to the wall |
 | `pivot_clearance` | `None`  | Difference in mm between bore and pin diameters at the straight shank. The gap there is half this value; CONICAL also keeps that gap normal to its sloped tip. `None` selects 0.6 mm with STANDARD or 0.4 mm for small conical hinges with TIGHT |
 | `pivot_z_offset`  | 0.2     | Lift of the hinge axis above the wall top. When closed, the lid then rests `2 × pivot_z_offset` above the base instead of meeting it on a zero-tolerance plane, so a high spot along the seam can't spring the front of the case open. Only the knuckle is raised — the leaves stay flush with the wall top. `0` disables it; must be less than the knuckle radius |
 | `clasp_clearance` | `None`  | Gap in mm along Y between neighbouring tab faces. `None` selects the fit profile's value; an explicit value overrides it |
-| `fit_profile` | `FitProfile.STANDARD` | `STANDARD` retains 0.3 mm radial and axial gaps. `TIGHT` uses gap values tested with the earlier cylindrical conical bore; retest with the new shaped bore |
+| `fit_profile` | `FitProfile.STANDARD` | `STANDARD` retains 0.3 mm radial and axial gaps. `TIGHT` gives small conical hinges the narrower gaps that worked in the earlier cylindrical-bore and the small shaped-bore trial |
 
 ### Tighter fit for small conical hinges
 
@@ -180,7 +180,7 @@ and the smaller case also slid along the hinge axis. The
 [tighter trial](https://github.com/pzfreo/pip-hinge/blob/main/examples/test_prints/tighter_fit/README.md) printed well on that
 printer. Both printed plates used the earlier cylindrical bore. The
 [new shaped-bore trial](https://github.com/pzfreo/pip-hinge/blob/main/examples/test_prints/shaped_bore_trial/README.md)
-has not been printed. Select the tighter gap values with:
+also released and felt good on that printer. Select the tighter gap values with:
 
 ```python
 from pip_hinge import FitProfile, Knuckle, PrintInPlaceHinge
@@ -207,9 +207,8 @@ try a small test print before committing to a large case.
 
 ### Pin shapes and print tradeoffs
 
-`CONICAL` uses short 45° pin tips and matching tapered bores. The tapered
-faces may reduce rocking while retaining support-friendly slopes, but this
-revised bore still needs a physical print test. `ROUNDED` preserves the older
+`CONICAL` uses short 45° pin tips and matching tapered bores. The small
+shaped-bore trial released and felt good in one print. `ROUNDED` preserves the older
 hemispherical tips and cylindrical bores. `BRIDGED` runs one continuous pin
 through the whole hinge, which can resist pulling the leaves apart along the
 axis, but its internal spans must print unsupported.
@@ -225,10 +224,12 @@ the 60 mm, 6-station defaults. The default `pivot_clearance` leaves only
 0.3 mm of radial space between the printed pin and bore. Sagging plastic
 can use up that space and fuse the hinge, even when the CAD solids are
 separate. A tester reported that the earlier round bore roof settled onto
-the pin and fused. The revised bore has a 45° teardrop roof, but remains
-**unprinted**. Check in the slicer that the unsupported pin spans use bridge
-settings. Expect rougher rotation than a well-fitting conical hinge; tune
-`pivot_clearance` with a small test piece if trying `BRIDGED`.
+the pin and fused. The revised 45° teardrop roof released in one small
+clamshell print, but that hinge was very loose and rocked around its pin.
+The conical hinge from the same print felt much better. Check in the slicer
+that the unsupported pin spans use bridge settings. Treat `BRIDGED` as an
+experimental option when a continuous pin is needed; do not assume its
+printed fit will match the conical hinge.
 
 `ROUNDED` preserves the older pin and bore sizing. On a large barrel with
 closely spaced stations, neighbouring rounded tips can meet inside a bore;

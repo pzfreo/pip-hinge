@@ -1,7 +1,8 @@
 """Export one small clamshell to test the shaped conical bore.
 
 Run from the repository root with ``.venv/bin/python examples/conical_bore_trial.py``.
-This is a new, unprinted geometry trial; the earlier test plates remain intact.
+This geometry released and felt good in one small clamshell print; the earlier
+test plates remain intact.
 """
 
 from pathlib import Path

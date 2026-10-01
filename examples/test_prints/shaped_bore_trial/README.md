@@ -1,11 +1,18 @@
-# Shaped conical bore trial — unprinted
+# Shaped conical bore trial — printed
 
 This small clamshell tests the revised conical bore. The bore follows the pin's
 straight shank and 45° tip, leaving a 0.2 mm modeled gap normal to the cone.
-This may reduce rocking compared with the earlier cylindrical bore, but that
-has **not** been verified by a physical print. The [earlier tighter-fit
+The printed small case released and the hinge felt good. In the same print, a
+small `BRIDGED` case with a teardrop-roof bore also released, but was very
+loose and rocked around its pin. This is one print result, not a fit guarantee
+for other sizes or printers. The [earlier tighter-fit
 plate](../tighter_fit/README.md) is the one that printed successfully; its
 STL uses the original cylindrical bore and remains available for comparison.
+
+The comparison used the same 24 mm, four-station SMALL hinge on both cases.
+The conical case used `FitProfile.TIGHT` (0.2 mm radial and axial gaps); the
+bridged case used `FitProfile.STANDARD` (0.3 mm radial and axial gaps). Printer,
+material, line width, and layer height were not recorded with this result.
 
 The trial uses `Knuckle.SMALL`, a 24 mm hinge with four stations, and
 `FitProfile.TIGHT`. Its case halves each measure 35 × 28 × 6 mm. Print the

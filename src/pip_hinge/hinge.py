@@ -62,7 +62,8 @@ class PinStyle(Enum):
     CONICAL uses 45-degree tips and matching bores. ROUNDED retains the
     original hemispherical tips and round bores. BRIDGED runs one cylindrical
     pin through every knuckle under a teardrop bore roof. It is experimental:
-    its roof and unsupported pin spans have not been print-tested together.
+    one small clamshell print released, but the bridged hinge rocked and felt
+    much looser than the conical hinge from the same print.
     """
 
     CONICAL = "conical"
@@ -73,8 +74,8 @@ class PinStyle(Enum):
 class FitProfile(Enum):
     """Clearance defaults derived from a printed subset of hinge sizes.
 
-    The successful prints used the earlier cylindrical bore; retest the
-    current shaped bore before relying on the same fit. TIGHT narrows the
+    Successful small conical prints include the earlier cylindrical bore and
+    one newer shaped-bore trial. TIGHT narrows the
     clearance on approximately 5 mm conical SMALL knuckles. It also
     narrows the axial tab gap when the station pitch is at most 6 mm.
     Explicit pivot_clearance and clasp_clearance values always take priority.

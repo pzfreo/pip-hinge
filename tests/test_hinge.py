@@ -3,7 +3,8 @@
 The default hinge is designed to print flat without slicer support: SMALL
 knuckles reach the bed with a tangent ramp, HALF knuckles with a self-supporting
 teardrop, and FULL knuckles rest the disc on the bed. The optional BRIDGED pin
-requires unsupported spans inside the bores and needs a real printer test.
+requires unsupported spans inside the bores. One small clamshell print released,
+but its hinge rocked noticeably.
 These tests build hinges across that range and assert:
 
   * the build succeeds and is a valid, manifold, multi-solid Compound;

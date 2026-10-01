@@ -29,7 +29,8 @@ inputs. The conical pin is the default; choose `PinStyle.ROUNDED` for the
 original hemispherical tips, or `PinStyle.BRIDGED` for one continuous pin
 through every bored tab. `BRIDGED` is experimental: bridge sag can fuse the
 pin to the bore despite the modeled clearance. Its revised teardrop roof
-has not been print-tested, so test it before printing a complete case.
+released in one small clamshell print, but that hinge rocked and felt much
+looser than the conical one. Test it before printing a complete case.
 
 The conical default uses a bore that follows the shank and 45° tips. The
 knuckle wall and station spacing limit its widest radius while keeping at
@@ -46,8 +47,8 @@ and normal gap along conical tips are half of it),
 and `clasp_clearance` (the gap along Y between neighbouring tabs). With the
 default `FitProfile.STANDARD`, both radial and axial gaps are 0.3 mm. See the
 [tight-fit rule](../README.md#tighter-fit-for-small-conical-hinges) for the
-0.2 mm gap values tested on small conical hinges with the earlier cylindrical
-bore. The shaped bore needs a new print test.
+0.2 mm gap values tested on small conical hinges with both the earlier
+cylindrical bore and the newer shaped bore.
 
 ## Knuckle sizes
 
